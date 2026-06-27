@@ -1,0 +1,10 @@
+# Netlify build configuration for Research to Impact.
+# The build pulls the Google Sheet and writes dist/index.html.
+[build]
+  command = "node build.js"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"        # Node 18+ required (global fetch). 20 is safe.
+  # SHEET_ID is read from build.js by default. To point at a different sheet
+  # without editing code, set a SHEET_ID environment variable in the Netlify UI.
