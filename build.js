@@ -36,7 +36,7 @@ const RESOURCE_TABS = [
 const SECTION_ALIASES = { 'R2I Library': 'Research-to-Impact Library' };
 const canon = s => SECTION_ALIASES[(s || '').trim()] || (s || '').trim();
 
-const warn = [], info = [];
+const warn = [], info = [], tabReport = [];
 
 // ---------------------------------------------------------------- helpers
 const TRUE = v => String(v == null ? '' : v).trim().toUpperCase() === 'TRUE';
@@ -70,34 +70,55 @@ function parseCSV(text) {
   if (field.length || row.length) { row.push(field); rows.push(row); }
   return rows;
 }
-function toObjects(text) {
-  const rows = parseCSV(text);
+function toObjects(text, expectedKey) {
+  const rows = parseCSV(text).filter(r => r.some(c => String(c).trim() !== ''));
   if (!rows.length) return [];
-  const headers = rows[0].map(h => h.trim());
-  return rows.slice(1).map(r => {
+  // Find the header row: the first row that actually contains expectedKey as a cell.
+  // This makes us robust to gviz mis-detecting the header (the bug that silently
+  // dropped Co-Planning / Repeated Reading / Routine Data Cycles).
+  let headerIdx = 0;
+  if (expectedKey) {
+    const want = expectedKey.trim().toLowerCase();
+    const found = rows.findIndex(r => r.some(c => String(c).trim().toLowerCase() === want));
+    if (found >= 0) headerIdx = found;
+  }
+  const headers = rows[headerIdx].map(h => h.trim());
+  return rows.slice(headerIdx + 1).map(r => {
     const o = {}; headers.forEach((h, idx) => { o[h] = r[idx] != null ? r[idx] : ''; }); return o;
   });
 }
 
-async function loadTab(name) {
+async function loadTab(name, expectedKey) {
+  let text;
   if (SOURCE === 'local') {
     const f = path.join(FIXTURE_DIR, name + '.csv');
     if (!fs.existsSync(f)) throw new Error(`Local fixture missing: ${f}`);
-    return toObjects(fs.readFileSync(f, 'utf8'));
+    text = fs.readFileSync(f, 'utf8');
+  } else {
+    // headers=1 pins the first row as the (single) header row instead of letting
+    // gviz auto-detect, which it got wrong on the larger tabs.
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}` +
+      `/gviz/tq?tqx=out:csv&headers=1&sheet=${encodeURIComponent(name)}`;
+    const res = await fetch(url);
+    if (!res.ok) {
+      throw new Error(`Could not fetch tab "${name}" (HTTP ${res.status}). ` +
+        `Check the tab name is exact and the sheet is shared "anyone with the link: Viewer".`);
+    }
+    text = await res.text();
   }
-  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(name)}`;
-  const res = await fetch(url);
-  if (!res.ok) {
-    throw new Error(`Could not fetch tab "${name}" (HTTP ${res.status}). ` +
-      `Check the tab name is exact and the sheet is shared "anyone with the link: Viewer".`);
+  const objs = toObjects(text, expectedKey);
+  // Loud, specific diagnostics so an empty/misread tab can never hide again.
+  tabReport.push(`${name}: ${objs.length} rows`);
+  if (expectedKey && objs.length && !(expectedKey in objs[0])) {
+    warn.push(`Tab "${name}": header row has no "${expectedKey}" column (got: ${Object.keys(objs[0]).slice(0, 6).join(', ')}...). Rows will be dropped.`);
   }
-  return toObjects(await res.text());
+  return objs;
 }
 
 // ---------------------------------------------------------------- build
 async function main() {
   // ----- Site (key/value) -----
-  const siteRows = await loadTab(SITE_TAB);
+  const siteRows = await loadTab(SITE_TAB, 'setting');
   const S = {}; siteRows.forEach(r => { if ((r.setting || '').trim()) S[r.setting.trim()] = r.value; });
   const site = {
     name: (S.site_name || 'Research to Impact').split('|')[0].trim(),
@@ -109,14 +130,14 @@ async function main() {
     .forEach(k => { if (!String(site[k] || '').trim()) warn.push(`Site setting blank: "${k}" (page area may render empty).`); });
 
   // ----- Modules (joined to sections) -----
-  const modRows = (await loadTab(MODULES_TAB)).map(m => ({
+  const modRows = (await loadTab(MODULES_TAB, 'module_name')).map(m => ({
     section: canon(m.section), order: num(m.module_order),
     name: (m.module_name || '').trim(), intro: m.module_intro || '',
   })).filter(m => m.name);
   const modulesBySection = group(modRows, m => m.section);
 
   // ----- Sections -----
-  const secRows = await loadTab(SECTIONS_TAB);
+  const secRows = await loadTab(SECTIONS_TAB, 'section_name');
   const allSections = secRows.map(r => {
     const name = (r.section_name || '').trim();
     return {
@@ -140,8 +161,9 @@ async function main() {
   const resources = []; let dropped = 0;
   for (const tab of RESOURCE_TABS) {
     let rows;
-    try { rows = await loadTab(tab); }
+    try { rows = await loadTab(tab, 'id'); }
     catch (e) { warn.push(e.message); continue; }
+    if (!rows.length) warn.push(`Resource tab "${tab}" returned 0 rows — check the tab exists and its header row has an "id" column.`);
     const sectionName = canon(tab);
     for (const r of rows) {
       if (!(r.id || '').trim()) continue;
@@ -208,6 +230,7 @@ async function main() {
   console.log(`  nav sections: ${sections.map(s => s.name).join(', ')}`);
   console.log(`  resources:    ${resources.length} (${live} published)`);
   console.log(`  library:      ${nav.library ? nav.library.name + (nav.library.visible ? ' [visible]' : ' [hidden-until-live]') : 'none'}`);
+  console.log(`\nTabs read:`); tabReport.forEach(m => console.log('  - ' + m));
   if (info.length) { console.log(`\nINFO:`); info.forEach(m => console.log('  - ' + m)); }
   if (warn.length) { console.log(`\nWARNINGS (${warn.length}):`); warn.forEach(m => console.log('  ! ' + m)); }
   else console.log('\nNo warnings.');
