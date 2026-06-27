@@ -1,0 +1,25 @@
+# Rebuilds the site from the Google Sheet without a code change.
+# - Nightly on a schedule
+# - On demand: Actions tab -> "Scheduled rebuild" -> Run workflow
+# Requires repo secret NETLIFY_BUILD_HOOK (Settings -> Secrets and variables -> Actions).
+name: Scheduled rebuild
+
+on:
+  schedule:
+    - cron: "0 9 * * *"   # 09:00 UTC daily (~2-5am US). Adjust as you like.
+  workflow_dispatch: {}    # manual "Run workflow" button
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Netlify build hook
+        env:
+          NETLIFY_BUILD_HOOK: ${{ secrets.NETLIFY_BUILD_HOOK }}
+        run: |
+          if [ -z "$NETLIFY_BUILD_HOOK" ]; then
+            echo "::error::NETLIFY_BUILD_HOOK secret is not set. Add it in Settings -> Secrets and variables -> Actions." >&2
+            exit 1
+          fi
+          curl -fsSL -X POST -d '{}' "$NETLIFY_BUILD_HOOK"
+          echo "Build hook triggered."

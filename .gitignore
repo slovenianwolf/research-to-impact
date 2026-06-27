@@ -1,0 +1,14 @@
+# Build output — Netlify regenerates this on every deploy
+dist/
+
+# Node dependencies (none committed; build uses only stdlib)
+node_modules/
+
+# Local environment / secrets — never commit
+.env
+.env.*
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.log
