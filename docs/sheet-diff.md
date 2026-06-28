@@ -88,7 +88,7 @@ should be *moved*, not duplicated. See D-relocations next.
 These are judgment calls — I did **not** assume them. The build works either way; this
 is about where things live for the reader.
 
-### D1. Move the evidence items out of Leading Implementation → Evidence & Impact (recommended)
+### D1. Move the evidence items out of Leading Implementation → Evidence & Impact ✅ DECIDED — do this
 
 Your `Leading Implementation` tab currently holds these in the **Core Content** module:
 
