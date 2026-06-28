@@ -29,8 +29,15 @@ const SITE_TAB = 'Site', SECTIONS_TAB = 'Sections', MODULES_TAB = 'Modules';
 // rows carry no `section` column), so we map tab name -> section here.
 const RESOURCE_TABS = [
   'Co-Planning', 'Repeated Reading', 'Routine Data Cycles',
-  'Leading Implementation', 'R2I Library', 'Site Assets',
+  'Leading Implementation', 'Stories & Spotlights', 'Evidence & Impact',
+  'R2I Library', 'Site Assets',
 ];
+// Tiers that render as browsable section + module pages (and appear in the nav).
+const PAGE_TIERS = ['IGNITE', 'Own', 'Stories', 'Evidence'];
+// Of those, the tiers that also get a card on the homepage. Practitioner-first:
+// the practice toolkits and Leading Implementation are featured; Stories and
+// Evidence are browsable + in nav, but deliberately NOT on the homepage.
+const HOMEPAGE_TIERS = ['IGNITE', 'Own'];
 // The sheet labels the library differently across tabs; normalize to the
 // canonical section_name from the Sections tab.
 const SECTION_ALIASES = { 'R2I Library': 'Research-to-Impact Library' };
@@ -125,6 +132,12 @@ async function main() {
     tagline: S.tagline, hero_headline: S.hero_headline, hero_subhead: S.hero_subhead,
     cta: S.hero_cta_label, footer: S.footer_attribution, license: S.license_line,
     about_story: S.about_story, about_ignite: S.about_ignite, about_practices: S.about_practices,
+    about_network: S.about_network,
+    // Optional HubSpot capture (soft email ask on gated resources). Blank = a
+    // placeholder shows instead of a live form, so nothing breaks before setup.
+    hubspot_portal: (S.hubspot_portal_id || '').trim(),
+    hubspot_form: (S.hubspot_form_id || '').trim(),
+    hubspot_region: (S.hubspot_region || 'na1').trim(),
   };
   ['tagline','hero_headline','hero_subhead','cta','footer','license','about_story','about_ignite','about_practices']
     .forEach(k => { if (!String(site[k] || '').trim()) warn.push(`Site setting blank: "${k}" (page area may render empty).`); });
@@ -153,7 +166,7 @@ async function main() {
   // the practice toolkits (tier IGNITE) and Leading Implementation (tier Own),
   // unless explicitly held out of nav.
   const pageSections = allSections
-    .filter(s => ['IGNITE', 'Own'].includes(s.tier) && s.nav_visible !== 'hidden-until-live')
+    .filter(s => PAGE_TIERS.includes(s.tier) && s.nav_visible !== 'hidden-until-live')
     .sort((a, b) => a.order - b.order);
   const pageNames = new Set(pageSections.map(s => s.name));
 
@@ -172,6 +185,7 @@ async function main() {
         title: (r.title || '').trim(), format: (r.format || 'Other').trim(),
         focal: TRUE(r.focal), focal_order: num(r.focal_order) || '',
         published: TRUE(r.published), status: (r.status || '').trim(),
+        gated: TRUE(r.gated),
         summary: r.summary || '', who_for: r.who_for || '',
         isnew: isRecent(r.date_published),
         video: String(r.link_type || '').trim() === 'embed' || !!(r.video_url || '').trim(),
@@ -212,6 +226,7 @@ async function main() {
   // ----- shape exactly what the page render expects -----
   const sections = pageSections.map(s => ({
     name: s.name, intro: s.intro,
+    homepage: HOMEPAGE_TIERS.includes(s.tier),
     modules: s.modules.map(m => ({ name: m.name, order: m.order, intro: m.intro })),
   }));
   const DATA = { site, sections, nav, resources };

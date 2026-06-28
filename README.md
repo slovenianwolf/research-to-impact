@@ -65,18 +65,32 @@ node build.js
 
 - Reads tabs: `Site`, `Sections`, `Modules`, and one resource tab per section
   (`Co-Planning`, `Repeated Reading`, `Routine Data Cycles`,
-  `Leading Implementation`, `R2I Library`, `Site Assets`). Instructions and Column
-  Guide tabs are ignored.
+  `Leading Implementation`, `Stories & Spotlights`, `Evidence & Impact`,
+  `R2I Library`, `Site Assets`). Instructions and Column Guide tabs are ignored.
 - A resource's **section is the tab it lives on** (resource rows have no `section`
   column).
 - **Nav** is built from the Sections tab: `header_label` groups the items,
   `tier` and `order` place them, `nav_visible = hidden-until-live` keeps a section
   out of the public nav. Practice toolkits cluster, then Leading Implementation,
-  then the Library dropdown; About sits on the right.
-- A section appears as a homepage card + browsable pages only when it's a live nav
-  section (tier IGNITE/Own, not hidden). The Library and Site Assets resources are
-  skipped until their section's `nav_visible` is set to `yes` — then they appear
-  automatically, no code change.
+  then the secondary sections (Stories & Spotlights, Evidence & Impact) and the
+  Library dropdown; About sits on the right.
+- **Two prominence tiers.** `tier` controls how a section surfaces:
+  - **Homepage tiers** (`IGNITE`, `Own`) — practice toolkits + Leading
+    Implementation — appear as homepage cards *and* browsable pages, with intro
+    videos. This is the practitioner-first front door.
+  - **Secondary tiers** (`Stories`, `Evidence`) — Stories & Spotlights and
+    Evidence & Impact — are browsable and in the nav, but deliberately *not* on
+    the homepage and without video bars. This is where research/funder-facing
+    goods (white papers, evaluation, annual reports, roadmap) live without
+    cluttering the practitioner experience.
+  - The Library and Site Assets resources are skipped until their section's
+    `nav_visible` is set to `yes` — then they appear automatically, no code change.
+- **Optional email ask on downloads.** Set `gated = TRUE` on a resource row to show
+  a soft, *skippable* "email to download" prompt (the toolkits stay open; this is
+  for the research tier). It routes to HubSpot once `hubspot_portal_id` and
+  `hubspot_form_id` are filled in on the `Site` tab; until then a harmless
+  placeholder shows and "just download" still works. No external script loads until
+  those IDs are set.
 - **Watch the warnings.** The build flags published focal cards with no summary,
   resources pointing at a module that doesn't exist, and blank Site settings. Fix
   these in the sheet.
