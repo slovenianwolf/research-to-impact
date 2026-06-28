@@ -131,6 +131,7 @@ the **Site** tab. Until then a harmless placeholder shows and downloads still wo
 | `order` | Left-to-right / top-to-bottom order. | a number |
 | `nav_visible` | `hidden-until-live` keeps a section out of the public nav until you're ready. | `yes` / `hidden-until-live` |
 | `landing_intro` | The intro paragraph on the section page. | text |
+| `header_image` | Optional banner image at the top of the section page. | A Drive image link, a URL, or a bare filename in `assets/`. Leave blank for none. |
 
 **What each `tier` does:**
 - `IGNITE` — a practice toolkit. Homepage card **and** browsable pages, with intro video.

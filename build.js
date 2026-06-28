@@ -186,7 +186,7 @@ async function main() {
       name, section_id: (r.section_id || '').trim(),
       header_label: (r.header_label || '').trim(), tier: (r.tier || '').trim(),
       order: num(r.order), nav_visible: (r.nav_visible || '').trim(),
-      intro: r.landing_intro || '',
+      intro: r.landing_intro || '', header_image: imageUrl(r.header_image),
       modules: (modulesBySection[name] || []).slice().sort((a, b) => a.order - b.order),
     };
   }).filter(s => s.name);
@@ -283,7 +283,7 @@ async function main() {
 
   // ----- shape exactly what the page render expects -----
   const sections = pageSections.map(s => ({
-    name: s.name, intro: s.intro,
+    name: s.name, intro: s.intro, header_image: s.header_image,
     homepage: HOMEPAGE_TIERS.includes(s.tier),
     modules: s.modules.map(m => ({ name: m.name, order: m.order, intro: m.intro })),
   }));
@@ -317,6 +317,15 @@ async function main() {
   for (const [k, v] of Object.entries(seo)) html = html.split(k).join(v);
   fs.mkdirSync(OUT_DIR, { recursive: true });
   fs.writeFileSync(path.join(OUT_DIR, 'index.html'), html);
+
+  // Copy committed static assets (images, etc.) into the publish dir, so links
+  // like assets/foo.jpg resolve. Netlify publishes dist/, so assets must land
+  // there too. Editors who use Google Drive links don't need this at all.
+  const ASSET_DIR = process.env.ASSET_DIR || 'assets';
+  if (fs.existsSync(ASSET_DIR)) {
+    fs.cpSync(ASSET_DIR, path.join(OUT_DIR, 'assets'), { recursive: true });
+    info.push(`Copied ${ASSET_DIR}/ into ${path.join(OUT_DIR, 'assets')}.`);
+  }
 
   // ----- report -----
   const live = resources.filter(r => r.published).length;
