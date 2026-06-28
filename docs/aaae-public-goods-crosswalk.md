@@ -70,13 +70,17 @@ can be turned on or off at any time.
 
 ---
 
+## Global Access — license
+
+The site is licensed **CC BY 4.0** (attribution only). This was chosen to align with
+the grant's Global Access requirement that funded developments be broadly
+disseminated, adaptable to diverse educational contexts, and embeddable by field
+partners — uses that the more restrictive CC BY-NC-ND (No-Derivatives,
+Non-Commercial) would have blocked. CC BY is also the foundation's standard for
+funded public goods under its Open Access policy.
+
 ## Open items / decisions to confirm
 
-- **License vs. Global Access.** The site currently uses **CC BY-NC-ND 4.0**
-  (No-Derivatives, Non-Commercial). The grant emphasizes making practices
-  *adaptable* and embeddable by field partners, which the ND/NC terms restrict.
-  Worth confirming with the foundation contact whether a more permissive license
-  (e.g., CC BY) is expected for the funded developments.
 - **Funder acknowledgment wording.** A Network & partners section now exists on the
   About page with placeholder text crediting partners and the Bill & Melinda Gates
   Foundation — confirm the exact required acknowledgment language.
