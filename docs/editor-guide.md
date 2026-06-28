@@ -85,16 +85,18 @@ they won't show on the site.
 
 ## Adding files (Download button)
 
-Put the file where the team already works: **Google Drive.**
-1. Upload the file (PDF, deck, etc.) to Drive.
-2. **Share → General access → Anyone with the link → Viewer.** (If you skip this,
-   people will hit a "request access" wall.)
-3. Copy the link and paste it into `link_url`.
+Two ways — see [`file-hosting.md`](file-hosting.md) for the full picture:
 
-The build cleans up the Drive link automatically — you can paste the normal
-"…/file/d/…/view?usp=sharing" link as-is. Any non-Drive URL also works. (A bare
-filename is treated as a file in the site's `assets/` folder, for files a developer
-has committed.)
+1. **Name-by-id (recommended).** Set `link_type = download`, leave `link_url` blank,
+   and drop the file into the published-files Drive folder **named starting with the
+   resource id**. An Apps Script keeps a `Files` tab up to date, and the build wires
+   the Download button automatically. No URL pasting.
+2. **Paste a link.** Set `link_type = external_link` and put a Google Doc / dashboard
+   / Drive share link in `link_url`. The build cleans Drive links up automatically.
+   This overrides option 1 for that one resource.
+
+Either way, make sure the file/folder is shared **Anyone with the link → Viewer** or
+people hit a "request access" wall (the Apps Script sets this for you).
 
 ## Adding images (card image)
 

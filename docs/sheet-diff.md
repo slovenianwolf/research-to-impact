@@ -121,7 +121,22 @@ to any toolkit case study you also want surfaced in the aggregated Stories index
 
 ---
 
-## F. Dropdowns + verify
+## F. Wire up file downloads (the `Files` tab + Apps Script)
+
+Most existing rows use `link_type = download` with no URL — the file is matched by
+naming it after the `id` in the published Drive folder. To make those Download
+buttons work, install the Apps Script that builds a `Files` tab (id → URL):
+
+1. **Extensions → Apps Script**, paste `docs/apps-script/PublishFiles.gs`, set
+   `PUBLISHED_FOLDER_ID` to your published folder's Drive id, save.
+2. Reload the sheet → **R2I → Rebuild Files manifest** (authorize when asked).
+3. Optional: add a daily trigger so it stays fresh.
+
+Full details in [`file-hosting.md`](file-hosting.md). Until the `Files` tab exists,
+download buttons won't resolve (the build says so); `external_link` resources with a
+pasted `link_url` work regardless.
+
+## G. Dropdowns + verify
 
 - Add the data-validation dropdowns from the [Editor's Guide](editor-guide.md) —
   include the new `gated` (TRUE/FALSE), `practice`, and the `Stories`/`Evidence` tier

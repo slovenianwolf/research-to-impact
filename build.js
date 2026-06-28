@@ -199,6 +199,29 @@ async function main() {
     .sort((a, b) => a.order - b.order);
   const pageNames = new Set(pageSections.map(s => s.name));
 
+  // ----- Files manifest (optional): id -> published file URL -----
+  // Maintained by the Apps Script that indexes the Drive published-files folder,
+  // so editors attach a file just by naming it after the id — no URL pasting.
+  // See docs/file-hosting.md. The tab is optional; without it, downloads simply
+  // don't resolve (and a warning is emitted per published item).
+  const filesMap = {};
+  try {
+    const fileRows = await loadTab('Files', 'id');
+    fileRows.forEach(r => {
+      const id = (r.id || '').trim();
+      if (id) filesMap[id] = { url: fileUrl(r.url), mime: (r.mime || '').trim() };
+    });
+  } catch (e) { /* Files tab is optional */ }
+  // Resolve a resource's link: an explicit link_url wins (external_link); otherwise
+  // a 'download' resolves to its file in the manifest by id.
+  const linkFor = r => {
+    const explicit = fileUrl(r.link_url);
+    if (explicit) return explicit;
+    const id = (r.id || '').trim();
+    if (String(r.link_type || '').trim() === 'download' && filesMap[id]) return filesMap[id].url;
+    return '';
+  };
+
   // ----- Resources (section injected from the tab) -----
   const resources = []; let dropped = 0;
   for (const tab of RESOURCE_TABS) {
@@ -219,7 +242,7 @@ async function main() {
         summary: r.summary || '', who_for: r.who_for || '',
         isnew: isRecent(r.date_published),
         video: String(r.link_type || '').trim() === 'embed' || !!(r.video_url || '').trim(),
-        link: fileUrl(r.link_url),
+        link: linkFor(r),
         video_url: fileUrl(r.video_url),
         image: imageUrl(r.image),
       };
@@ -257,7 +280,12 @@ async function main() {
       warn.push(`Section "${s.name}" has unknown tier "${s.tier}" (won't surface anywhere). Allowed: ${[...TIERS].join(', ')}.`);
   });
   resources.filter(r => r.published && r.gated && !r.link)
-    .forEach(r => warn.push(`Gated resource "${r.id}" has no link_url (the email ask leads nowhere).`));
+    .forEach(r => warn.push(`Gated resource "${r.id}" resolves to no file (the email ask leads nowhere).`));
+  // Once a Files manifest exists, flag any published item that resolves to nothing.
+  if (Object.keys(filesMap).length) {
+    resources.filter(r => r.published && !r.video && !r.link)
+      .forEach(r => warn.push(`Published resource "${r.id}" resolves to no file — name a file after this id in the published folder, or set a link_url.`));
+  }
 
   // ----- nav metadata (data-driven grouping + dividers) -----
   const groups = [];
