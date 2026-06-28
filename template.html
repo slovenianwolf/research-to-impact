@@ -274,6 +274,7 @@ nav.main .nav-div{width:1px;height:20px;background:rgba(255,255,255,.22);margin:
 .gate-acts{margin-top:14px;text-align:center}
 .gate-skip{border:0;background:none;color:#5a656f;text-decoration:underline;cursor:pointer;font-size:13px;font-family:inherit}
 .gate-chip{background:#eef2f6;color:#5a656f;border-radius:20px;padding:2px 9px;font-size:11px;white-space:nowrap}
+.rimg{display:block;width:100%;height:140px;object-fit:cover;border-radius:8px;margin-bottom:10px;background:#eef2f6}
 </style>
 <script>
 const DATA = __DATA__;
@@ -361,11 +362,22 @@ function module(sec,mod){
  ${fhtml}${mhtml}${empty}
  ${sObj.homepage?'<p class="attrib">Built on the Marshall Research to Impact practices &rarr;</p>':''}`;
 }
+function resAction(r){
+ if(r.video){
+  const u=r.video_url||r.link||'';
+  return u?`<button class="dl" data-open="${escAttr(u)}">${icon('Video',14)} Watch</button>`
+          :`<button class="dl" onclick="toast('Video link not set yet — add a video_url in the sheet')">${icon('Video',14)} Watch</button>`;
+ }
+ const u=r.link||'';
+ if(r.gated) return `<button class="dl" data-gate="1" data-title="${escAttr(r.title)}" data-link="${escAttr(u)}">${icon('Document',14)} Download</button>`;
+ return u?`<button class="dl" data-open="${escAttr(u)}">${icon('Document',14)} Download</button>`
+         :`<button class="dl" onclick="toast('File link not set yet — add a link_url in the sheet')">${icon('Document',14)} Download</button>`;
+}
 function card(r){
  if(r.published){
-  return `<div class="rcard"><div class="top">${icon(r.format,19)}<div class="ttl">${esc(r.title)}</div>${r.isnew?'<span class="chip new">New</span>':''}<span class="chip ok">Available</span></div>
+  return `<div class="rcard">${r.image?`<img class="rimg" src="${escAttr(r.image)}" alt="" loading="lazy"/>`:''}<div class="top">${icon(r.format,19)}<div class="ttl">${esc(r.title)}</div>${r.isnew?'<span class="chip new">New</span>':''}<span class="chip ok">Available</span></div>
    ${r.summary?`<div class="desc">${esc(r.summary)}</div>`:''}${r.who_for?`<div class="who">${esc(r.who_for)}</div>`:''}
-   <div class="acts"><span class="chip fmt">${esc(r.format)}</span>${r.gated?'<span class="chip gate-chip">Email to download</span>':''}${r.video?`<button class="dl" onclick="toast('Prototype — video plays inline')">${icon('Video',14)} Watch</button>`:`<button class="dl" ${r.gated?`data-gate="1" data-title="${escAttr(r.title)}"`:`onclick="toast('Prototype — this is where the file downloads')"`}>${icon('Document',14)} Download</button>`}</div></div>`;
+   <div class="acts"><span class="chip fmt">${esc(r.format)}</span>${r.gated?'<span class="chip gate-chip">Email to download</span>':''}${resAction(r)}</div></div>`;
  }
  return `<div class="rcard soon"><div class="top">${icon(r.format,19)}<div class="ttl">${esc(r.title)}</div><span class="chip soon">Coming soon</span></div>${r.summary?`<div class="desc" style="color:#8a949d">${esc(r.summary)}</div>`:''}</div>`;
 }
@@ -470,7 +482,11 @@ document.addEventListener('click',e=>{
 document.addEventListener('keydown',e=>{if(e.key==='Escape')askOpen(false);});
 
 /* ---- soft email ask (gated resources -> HubSpot) ---- */
-function askEmail(title){
+let gatePendingLink='';
+function openUrl(u){ if(u) window.open(u,'_blank','noopener'); }
+document.addEventListener('click',e=>{const o=e.target.closest('[data-open]');if(o){e.preventDefault();openUrl(o.getAttribute('data-open'));}});
+function askEmail(title,link){
+ gatePendingLink=link||'';
  document.getElementById('gateRes').textContent=title?('“'+title+'”'):'this resource';
  const host=document.getElementById('gateForm');
  const pid=DATA.site.hubspot_portal, fid=DATA.site.hubspot_form;
@@ -483,9 +499,9 @@ function askEmail(title){
  const g=document.getElementById('gate');g.classList.add('open');g.setAttribute('aria-hidden','false');
 }
 function gateClose(){const g=document.getElementById('gate');g.classList.remove('open');g.setAttribute('aria-hidden','true');}
-function gateProceed(){gateClose();toast('Prototype — this is where the file downloads');}
+function gateProceed(){const u=gatePendingLink;gateClose();if(u)openUrl(u);else toast('File link not set yet — add a link_url in the sheet');}
 document.getElementById('gate').addEventListener('click',e=>{if(e.target.id==='gate')gateClose();});
-document.addEventListener('click',e=>{const b=e.target.closest('[data-gate]');if(b){e.preventDefault();askEmail(b.getAttribute('data-title'));}});
+document.addEventListener('click',e=>{const b=e.target.closest('[data-gate]');if(b){e.preventDefault();askEmail(b.getAttribute('data-title'),b.getAttribute('data-link'));}});
 /* Load the HubSpot embed script only when IDs are configured (no surprise calls before setup). */
 if(DATA.site.hubspot_portal&&DATA.site.hubspot_form){
  const hs=document.createElement('script');hs.src='https://js.hsforms.net/forms/embed/v2.js';hs.async=true;document.head.appendChild(hs);

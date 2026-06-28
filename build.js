@@ -57,6 +57,31 @@ function group(arr, keyFn) {
   const out = {}; for (const x of arr) { const k = keyFn(x); (out[k] = out[k] || []).push(x); } return out;
 }
 
+// ---- link/asset normalization ----
+// Editors paste a Google Drive "share" link (or any URL) into the sheet. Pull the
+// file id out of the common Drive URL shapes so we can build a clean direct link.
+function driveId(url) {
+  const s = String(url || '');
+  const m = s.match(/\/file\/d\/([-\w]{20,})/) || s.match(/[?&]id=([-\w]{20,})/);
+  return m ? m[1] : null;
+}
+// A link to open/download a file. Drive -> the file's view page (lets the user
+// preview or download); any other URL passes through; a bare filename is treated
+// as a path in the repo's assets/ folder. Blank stays blank.
+function fileUrl(url) {
+  const s = String(url || '').trim(); if (!s) return '';
+  const id = driveId(s); if (id) return `https://drive.google.com/file/d/${id}/view`;
+  if (/^https?:\/\//i.test(s)) return s;
+  return 'assets/' + s.replace(/^\/+/, '');
+}
+// An image src. Drive -> a sized thumbnail (renders inline); other URLs/paths as above.
+function imageUrl(url) {
+  const s = String(url || '').trim(); if (!s) return '';
+  const id = driveId(s); if (id) return `https://drive.google.com/thumbnail?id=${id}&sz=w1200`;
+  if (/^https?:\/\//i.test(s)) return s;
+  return 'assets/' + s.replace(/^\/+/, '');
+}
+
 // Minimal RFC-4180-ish CSV parser: handles quoted fields, embedded commas,
 // newlines, and "" escapes. Returns an array of row-arrays.
 function parseCSV(text) {
@@ -190,6 +215,9 @@ async function main() {
         summary: r.summary || '', who_for: r.who_for || '',
         isnew: isRecent(r.date_published),
         video: String(r.link_type || '').trim() === 'embed' || !!(r.video_url || '').trim(),
+        link: fileUrl(r.link_url),
+        video_url: fileUrl(r.video_url),
+        image: imageUrl(r.image),
       };
       if (!pageNames.has(rec.section)) { dropped++; continue; }
       resources.push(rec);

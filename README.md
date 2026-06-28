@@ -42,6 +42,12 @@ drives the site.
 
 ## Day-to-day
 
+> **Content editors:** see [`docs/editor-guide.md`](docs/editor-guide.md) for a
+> plain-language guide to every tab and column, how to add files/images/videos
+> (paste a Google Drive link into `link_url` / `video_url` / `image`), and the
+> recommended Google Sheets dropdowns. [`docs/aaae-public-goods-crosswalk.md`](docs/aaae-public-goods-crosswalk.md)
+> maps the grant's committed public goods to where they live on the site.
+
 - **Change content** → edit the sheet. It refreshes on the **nightly rebuild**.
 - **Need it live now** → GitHub repo → *Actions → Scheduled rebuild → Run workflow*
   (or POST the build hook URL). Either way the site rebuilds in ~1 minute.
