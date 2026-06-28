@@ -186,6 +186,7 @@ async function main() {
         focal: TRUE(r.focal), focal_order: num(r.focal_order) || '',
         published: TRUE(r.published), status: (r.status || '').trim(),
         gated: TRUE(r.gated),
+        practice: (r.practice || '').trim(),
         summary: r.summary || '', who_for: r.who_for || '',
         isnew: isRecent(r.date_published),
         video: String(r.link_type || '').trim() === 'embed' || !!(r.video_url || '').trim(),
@@ -213,6 +214,10 @@ async function main() {
   });
   const libSec = allSections.find(s => s.tier === 'R2I');
   const aboutSec = allSections.find(s => s.tier === 'Site');
+  // The Stories section is woven into the toolkit pages: a story tagged with a
+  // `practice` surfaces on that practice's page. We pass its name so the template
+  // can find those resources without hardcoding the section title.
+  const storiesSec = allSections.find(s => s.tier === 'Stories');
   const nav = {
     groups,
     library: libSec ? {
@@ -229,7 +234,7 @@ async function main() {
     homepage: HOMEPAGE_TIERS.includes(s.tier),
     modules: s.modules.map(m => ({ name: m.name, order: m.order, intro: m.intro })),
   }));
-  const DATA = { site, sections, nav, resources };
+  const DATA = { site, sections, nav, resources, storiesSection: storiesSec ? storiesSec.name : null };
 
   // ----- inject + write -----
   if (!fs.existsSync(TEMPLATE)) throw new Error(`Template not found: ${TEMPLATE}`);

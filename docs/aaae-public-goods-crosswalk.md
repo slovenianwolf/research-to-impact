@@ -32,7 +32,7 @@ and Outputs, and Global Access).
 | 1 | Three validated R2I practices (Co-Planning, Repeated Reading, Routine Data Cycles) | Availability + Adoption | Practice Toolkits | Yes (homepage) | No | ✅ |
 | 2 | Training programs & resources (decks, onboarding, guidelines) | Adoption | Leading Implementation → Core Content | Yes | No | 🟡 |
 | 3 | Implementation toolkits, templates, coaching agendas | Adoption | Leading Implementation → Coaching & Team Tools | Yes | No | 🟡 |
-| 4 | Codified data systems & dashboards | Adoption | Leading Implementation → Field Resources | No | No | ⬜ |
+| 4 | Codified data systems & dashboards | Adoption | Leading Implementation → Field Resources | Yes | No | 🟡 |
 | 5 | Change packages (2+), case studies + roadmap | Efficacy + Adoption | Evidence & Impact → Equity-Gap Roadmap | Yes | Soft | 🟡 |
 | 6 | Public-goods roadmap to close the equity gap | Awareness + Adoption | Evidence & Impact → Equity-Gap Roadmap | Yes | No | 🟡 |
 | 7 | White papers (Year 1, Year 2) | Awareness + Efficacy | Evidence & Impact → White Papers | No | Soft | 🟡 (Yr 1 ready) |
@@ -58,12 +58,18 @@ can be turned on or off at any time.
    near About — available and discoverable, never centered. This keeps the front
    door focused on what a teacher or leader can use on Monday.
 
-2. **Open by default.** Everything is free. Only the research tier carries an
+2. **Stories woven in, not siloed.** A spotlight or case study tagged with a
+   `practice` surfaces in context as a "Stories from the field" rail on that
+   practice's toolkit page, so a practitioner meets the evidence where they already
+   are. Stories & Spotlights remains the aggregated index — authored once, managed in
+   one place, but visible throughout the site.
+
+3. **Open by default.** Everything is free. Only the research tier carries an
    *optional* email ask, and even there a "no thanks, just download" path always
    works. This keeps us aligned with the foundation's **Global Access** requirement
    that funded developments be promptly, broadly, and affordably available.
 
-3. **Sheet-driven.** Placement (`tier`, `header_label`, `order`), prominence
+4. **Sheet-driven.** Placement (`tier`, `header_label`, `order`), prominence
    (`focal`), visibility (`nav_visible`), and the email ask (`gated`) are all columns
    in the master Google Sheet. New public goods get a home by adding a row — no code
    change.

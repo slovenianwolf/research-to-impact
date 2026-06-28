@@ -336,10 +336,14 @@ function home(){
 function section(sec){
  const s=DATA.sections.find(x=>x.name===sec);
  const mcards=s.modules.map((m,i)=>{const av=availCount(sec,m.name);return `<a class="mcard" href="#" data-go="module:${sec}|${m.name}"><div class="mn">${sec==='Leading Implementation'?'Group':'Module '+(i+1)}</div><div class="mt">${esc(m.name)}</div>${av?`<span class="chip ok mt-chip">${av} available</span>`:`<span class="chip soon">coming soon</span>`}</div></a>`}).join('');
+ const SS=DATA.storiesSection;
+ const stories=(s.homepage&&SS)?state.filter(r=>r.section===SS&&r.practice===sec&&r.published):[];
+ const shtml=stories.length?`<div class="lab">Stories from the field</div><div class="focalgrid">${stories.map(card).join('')}</div><p class="storiesmore"><a href="#" data-go="section:${esc(SS)}">See all stories &amp; spotlights &rarr;</a></p>`:'';
  return `<div class="crumb"><a href="#" data-go="home">Home</a> / ${esc(sec)}</div>
  <div class="section-h"><h1 class="serif">${esc(sec)}</h1><p>${esc(s.intro)}</p></div>
  ${s.homepage?`<div class="vidbar">${icon('Video',18)} Intro video (Vimeo, plays inline)</div>`:''}
  <div class="lab">${sec==='Leading Implementation'?'Collections':'Modules'}</div><div class="mcards">${mcards}</div>
+ ${shtml}
  ${s.homepage?'<p class="attrib">Built on the Marshall Research to Impact practices &rarr;</p>':''}`;
 }
 function module(sec,mod){
