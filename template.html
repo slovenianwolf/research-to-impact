@@ -3,7 +3,17 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Research to Impact — prototype</title>
+<title>__SEO_TITLE__</title>
+<meta name="description" content="__SEO_DESC__"/>
+<meta property="og:title" content="__SEO_TITLE__"/>
+<meta property="og:description" content="__SEO_DESC__"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="__SEO_URL__"/>
+<meta property="og:image" content="__SEO_IMAGE__"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="__SEO_TITLE__"/>
+<meta name="twitter:description" content="__SEO_DESC__"/>
+<link rel="icon" href="__FAVICON__"/>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Arimo:wght@400;500;700&display=swap" rel="stylesheet">
@@ -318,7 +328,35 @@ function navHtml(){
  return out;
 }
 
-function render(){renderApp();renderPanel();document.getElementById('nav').innerHTML=navHtml();}
+function render(){renderApp();renderPanel();document.getElementById('nav').innerHTML=navHtml();document.title=titleFor(view);}
+function titleFor(v){
+ const site=(DATA.site&&DATA.site.name)?DATA.site.name:'Research to Impact';
+ if(!v||v.type==='home')return site;
+ if(v.type==='about')return 'About — '+site;
+ if(v.type==='section')return v.section+' — '+site;
+ if(v.type==='module')return v.module+' — '+v.section+' — '+site;
+ return site;
+}
+/* ---- deep links: every view has a shareable #/ URL ---- */
+function viewToHash(v){
+ if(!v||v.type==='home')return '#/';
+ if(v.type==='about')return '#/about';
+ if(v.type==='section')return '#/'+encodeURIComponent(v.section);
+ if(v.type==='module')return '#/'+encodeURIComponent(v.section)+'/'+encodeURIComponent(v.module);
+ return '#/';
+}
+function hashToView(){
+ const raw=(location.hash||'').replace(/^#\/?/,'');
+ if(!raw)return {type:'home'};
+ const parts=raw.split('/').map(s=>{try{return decodeURIComponent(s)}catch(_){return s}});
+ if(parts[0]==='about')return {type:'about'};
+ const sec=DATA.sections.find(s=>s.name===parts[0]);
+ if(!sec)return {type:'home'};
+ if(parts[1]){const mod=sec.modules.find(m=>m.name===parts[1]);return mod?{type:'module',section:sec.name,module:mod.name}:{type:'section',section:sec.name};}
+ return {type:'section',section:sec.name};
+}
+function applyHash(){view=hashToView();render();}
+window.addEventListener('hashchange',applyHash);
 function renderApp(){
  const a=document.getElementById('app');
  if(view.type==='home') a.innerHTML=home();
@@ -427,15 +465,20 @@ function togglePanel(force){
 let tT;
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(tT);tT=setTimeout(()=>t.classList.remove('show'),1900);}
 
+function navigate(v){
+ if(askWrap.classList.contains('open'))askOpen(false);
+ const h=viewToHash(v);
+ if(location.hash===h){view=v;render();}  // same hash won't fire hashchange
+ else location.hash=h;                     // fires hashchange -> applyHash()
+}
 document.addEventListener('click',e=>{
  const g=e.target.closest('[data-go]'); if(!g)return; e.preventDefault();
- const v=g.getAttribute('data-go');
- if(v==='home')view={type:'home'};
- else if(v==='about')view={type:'about'};
- else if(v.startsWith('section:'))view={type:'section',section:v.slice(8)};
- else if(v.startsWith('module:')){const [sec,mod]=v.slice(7).split('|');view={type:'module',section:sec,module:mod};}
- if(askWrap.classList.contains('open'))askOpen(false);
- render();
+ const v=g.getAttribute('data-go'); let nv;
+ if(v==='home')nv={type:'home'};
+ else if(v==='about')nv={type:'about'};
+ else if(v.startsWith('section:'))nv={type:'section',section:v.slice(8)};
+ else if(v.startsWith('module:')){const [sec,mod]=v.slice(7).split('|');nv={type:'module',section:sec,module:mod};}
+ if(nv)navigate(nv);
 });
 document.getElementById('demoToggle').addEventListener('click',()=>togglePanel());
 /* ---- combined search + ask ---- */
@@ -509,7 +552,7 @@ if(DATA.site.hubspot_portal&&DATA.site.hubspot_form){
 
 document.getElementById('footAttr').textContent=DATA.site.footer;
 document.getElementById('footLic').textContent=DATA.site.license;
-render();
+applyHash();
 </script>
 </body>
 </html>

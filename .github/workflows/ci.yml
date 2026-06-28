@@ -1,0 +1,37 @@
+# Validates the build on every change. Runs the build from the local fixtures in
+# STRICT mode (fails on hard errors like duplicate ids), surfaces the warning
+# report in the run summary, and smoke-checks that the rendered page parses.
+name: Build check
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Build from fixtures (strict)
+        run: |
+          set -o pipefail
+          SHEET_SOURCE=local STRICT=1 node build.js | tee build-report.txt
+
+      - name: Smoke-check rendered output
+        run: |
+          node -e "const fs=require('fs');const h=fs.readFileSync('dist/index.html','utf8');const s=h.indexOf('<script>')+8,e=h.lastIndexOf('</script>');new Function(h.slice(s,e));const m=h.match(/const DATA = (\{.*\});\nlet state/s);JSON.parse(m[1]);if(h.includes('__SEO_')||h.includes('__DATA__'))throw new Error('unreplaced placeholder in output');console.log('rendered output OK');"
+
+      - name: Publish report to run summary
+        if: always()
+        run: |
+          {
+            echo '## Build report'
+            echo '```'
+            cat build-report.txt 2>/dev/null || echo '(build did not produce a report)'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

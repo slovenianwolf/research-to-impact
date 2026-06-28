@@ -43,7 +43,11 @@ const HOMEPAGE_TIERS = ['IGNITE', 'Own'];
 const SECTION_ALIASES = { 'R2I Library': 'Research-to-Impact Library' };
 const canon = s => SECTION_ALIASES[(s || '').trim()] || (s || '').trim();
 
-const warn = [], info = [], tabReport = [];
+const warn = [], info = [], tabReport = [], err = [];
+// STRICT=1 makes the build fail (exit 1) when there are hard errors. CI runs
+// strict so mistakes can't merge; the Netlify/nightly build stays lenient so a
+// single bad row never takes the whole site offline.
+const STRICT = String(process.env.STRICT || '').trim() === '1';
 
 // ---------------------------------------------------------------- helpers
 const TRUE = v => String(v == null ? '' : v).trim().toUpperCase() === 'TRUE';
@@ -234,6 +238,27 @@ async function main() {
   resources.filter(r => r.published && r.focal && !String(r.summary).trim())
     .forEach(r => warn.push(`Published focal resource "${r.id}" has no summary (card shows no description).`));
 
+  // Hard errors (fail the build under STRICT): duplicate ids break rendering.
+  const seenId = new Set();
+  resources.forEach(r => {
+    if (seenId.has(r.id)) err.push(`Duplicate resource id "${r.id}" — ids must be unique across the whole site.`);
+    else seenId.add(r.id);
+  });
+
+  // Soft warnings: invalid enumerations degrade gracefully but signal a typo.
+  const FORMATS = new Set(['Document', 'Deck', 'Tool', 'Protocol', 'Template', 'Case Study', 'Infographic', 'Video', 'Other']);
+  resources.forEach(r => {
+    if (r.format && !FORMATS.has(r.format))
+      warn.push(`Resource "${r.id}" has unknown format "${r.format}" (uses a generic icon). Allowed: ${[...FORMATS].join(', ')}.`);
+  });
+  const TIERS = new Set(['IGNITE', 'Own', 'Stories', 'Evidence', 'R2I', 'Site']);
+  allSections.forEach(s => {
+    if (s.tier && !TIERS.has(s.tier))
+      warn.push(`Section "${s.name}" has unknown tier "${s.tier}" (won't surface anywhere). Allowed: ${[...TIERS].join(', ')}.`);
+  });
+  resources.filter(r => r.published && r.gated && !r.link)
+    .forEach(r => warn.push(`Gated resource "${r.id}" has no link_url (the email ask leads nowhere).`));
+
   // ----- nav metadata (data-driven grouping + dividers) -----
   const groups = [];
   pageSections.forEach(s => {
@@ -264,11 +289,32 @@ async function main() {
   }));
   const DATA = { site, sections, nav, resources, storiesSection: storiesSec ? storiesSec.name : null };
 
+  // ----- SEO / social metadata (build-time so crawlers and link unfurlers,
+  // which don't run our JS, see real title/description/image) -----
+  const escHtml = s => String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const domain = (S.domain || '').trim().replace(/^https?:\/\//, '').replace(/\/+$/, '');
+  const baseUrl = domain ? `https://${domain}` : '';
+  const heroImg = (S.hero_image || '').trim();
+  let seoImage = '';
+  if (/^https?:\/\//i.test(heroImg)) seoImage = heroImg;
+  else if (driveId(heroImg)) seoImage = imageUrl(heroImg);
+  else if (heroImg && baseUrl) seoImage = `${baseUrl}/assets/${heroImg.replace(/^\/+/, '')}`;
+  const faviconSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#21344C"/><circle cx="16" cy="16" r="7" fill="#fc6e42"/></svg>';
+  const seo = {
+    '__SEO_TITLE__': escHtml((S.site_name || site.name || 'Research to Impact').trim()),
+    '__SEO_DESC__': escHtml((site.tagline || site.hero_subhead || '').trim()),
+    '__SEO_URL__': escHtml(baseUrl),
+    '__SEO_IMAGE__': escHtml(seoImage),
+    '__FAVICON__': 'data:image/svg+xml,' + encodeURIComponent(faviconSvg),
+  };
+
   // ----- inject + write -----
   if (!fs.existsSync(TEMPLATE)) throw new Error(`Template not found: ${TEMPLATE}`);
   const tpl = fs.readFileSync(TEMPLATE, 'utf8');
   if (!tpl.includes('__DATA__')) throw new Error('template.html is missing the __DATA__ placeholder.');
-  const html = tpl.replace('__DATA__', JSON.stringify(DATA));
+  let html = tpl.replace('__DATA__', JSON.stringify(DATA));
+  for (const [k, v] of Object.entries(seo)) html = html.split(k).join(v);
   fs.mkdirSync(OUT_DIR, { recursive: true });
   fs.writeFileSync(path.join(OUT_DIR, 'index.html'), html);
 
@@ -282,6 +328,12 @@ async function main() {
   if (info.length) { console.log(`\nINFO:`); info.forEach(m => console.log('  - ' + m)); }
   if (warn.length) { console.log(`\nWARNINGS (${warn.length}):`); warn.forEach(m => console.log('  ! ' + m)); }
   else console.log('\nNo warnings.');
+  if (err.length) { console.log(`\nERRORS (${err.length}):`); err.forEach(m => console.log('  X ' + m)); }
+
+  if (STRICT && err.length) {
+    console.error(`\nSTRICT mode: ${err.length} error(s) — failing build.`);
+    process.exit(1);
+  }
 }
 
 main().catch(e => { console.error('\nBUILD FAILED: ' + e.message); process.exit(1); });

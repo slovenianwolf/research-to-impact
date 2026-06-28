@@ -10,12 +10,19 @@ Google Sheet  ──>  build.js  ──>  dist/index.html  ──>  Netlify  ─
  (your edits)      (template.html + sheet data)         (auto-deploy)
 ```
 
-- **template.html** — the site shell (design, fonts, search, page logic). The data
-  is a single placeholder, `__DATA__`, that the build fills in.
-- **build.js** — pulls each sheet tab as CSV, assembles the page data, and writes
-  `dist/index.html`. Prints a report plus warnings about any data problems.
+- **template.html** — the site shell (design, fonts, search, page logic). The build
+  fills in the data placeholder `__DATA__` and the SEO placeholders
+  (`__SEO_TITLE__`, `__SEO_DESC__`, `__SEO_URL__`, `__SEO_IMAGE__`, `__FAVICON__`).
+  Every view also has a shareable `#/` deep link (e.g. `#/Co-Planning/Getting Started`).
+- **build.js** — pulls each sheet tab as CSV, assembles the page data, normalizes
+  links/images, injects SEO/social meta, and writes `dist/index.html`. Prints a
+  report with warnings and (hard) errors. `STRICT=1` makes it exit non-zero on
+  errors (duplicate ids) — used by CI; the normal build stays lenient.
 - **netlify.toml** — tells Netlify to run `node build.js` and publish `dist/`.
 - **.github/workflows/rebuild.yml** — rebuilds nightly and on demand.
+- **.github/workflows/ci.yml** — on every push/PR, runs the build from fixtures in
+  strict mode, smoke-checks the rendered page, and posts the report to the run
+  summary, so a broken sheet/template can't merge silently.
 
 ## One-time setup
 
