@@ -120,3 +120,11 @@ node build.js
 
 When Summit IT points `researchtoimpact.marshallstreet.org` at this Netlify site via
 one CNAME, nothing here changes — same repo, same build.
+
+## License
+
+Content and tooling are licensed under [Creative Commons Attribution 4.0
+International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/) — see
+[`LICENSE`](LICENSE). This matches the Global Access / Open Access terms of the
+Bill & Melinda Gates Foundation Ignite grant: anyone may share and adapt these
+public goods, including commercially, as long as they give attribution.

@@ -30,6 +30,29 @@ the file, or which columns count as required/recommended/auto in the lists under
 
 Still do **A5 (lock `published`)** by hand — protected ranges aren't set by the script.
 
+### Letting the content team re-run it themselves
+
+The script is bound to the spreadsheet, so the **R2I → Apply guardrails** menu shows up
+for anyone working in the sheet — no Apps Script editor needed. To set them up once:
+
+1. **Give them Editor access** to the spreadsheet (Share → Editor). Viewers and
+   Commenters don't get the menu and can't run it.
+2. Have each person **reload the sheet** so the `R2I` menu appears (it's added when the
+   sheet opens).
+3. The **first** time *each* editor runs it, Google shows an authorization prompt —
+   this is per-person, one-time. They click **Advanced → "Go to R2I … (unsafe)" →
+   Allow.** The "unsafe" wording is normal for an in-house script; it only asks for
+   access to this sheet and its Drive files. After that first approval it's one click,
+   every time.
+
+That's the whole setup. Tell Stephanie and Kelly: *after you add or edit rows, click
+**R2I → Apply guardrails** to refresh the dropdowns and colors.* It's safe to run as
+often as they like — it never touches their data, only the validation and formatting.
+
+> If you'd rather not have editors see the authorization prompt at all, the alternative
+> is publishing the script as an internal Workspace add-on — more setup than it's worth
+> for a two-person team. The shared-menu approach above is the simple path.
+
 ---
 
 ## Option 2: manual checklist
