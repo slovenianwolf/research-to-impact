@@ -23,6 +23,7 @@ const SOURCE     = process.env.SHEET_SOURCE || 'remote';   // 'remote' | 'local'
 const FIXTURE_DIR= process.env.FIXTURE_DIR || 'fixtures';
 const TEMPLATE   = process.env.TEMPLATE   || 'template.html';
 const OUT_DIR    = process.env.OUT_DIR    || 'dist';
+const CACHE_BUST = Date.now();   // unique per build; defeats gviz CSV caching
 
 const SITE_TAB = 'Site', SECTIONS_TAB = 'Sections', MODULES_TAB = 'Modules';
 // Resource tabs. The section a row belongs to is the TAB it sits on (resource
@@ -133,8 +134,11 @@ async function loadTab(name, expectedKey) {
   } else {
     // headers=1 pins the first row as the (single) header row instead of letting
     // gviz auto-detect, which it got wrong on the larger tabs.
+    // _cb is a unique-per-build cache-buster: gviz/Google CDN otherwise serves a
+    // stale CSV snapshot for several minutes, so a "publish now" rebuild can read
+    // old data. A unique query param forces a fresh export every build.
     const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}` +
-      `/gviz/tq?tqx=out:csv&headers=1&sheet=${encodeURIComponent(name)}`;
+      `/gviz/tq?tqx=out:csv&headers=1&sheet=${encodeURIComponent(name)}&_cb=${CACHE_BUST}`;
     const res = await fetch(url);
     if (!res.ok) {
       throw new Error(`Could not fetch tab "${name}" (HTTP ${res.status}). ` +
