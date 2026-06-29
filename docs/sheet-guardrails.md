@@ -21,8 +21,13 @@ its values from the **Lists** tab and targets columns **by header name**, so the
 **Setup:**
 1. Import the Lists tab if you haven't: **File → Import → Upload `docs/sheet-templates/Lists.csv` → Insert new sheet**, then rename the tab **`Lists`**.
 2. **Extensions → Apps Script.** Add a file and paste in `Guardrails.gs` (keep `PublishFiles.gs` too). **Save.**
-3. Reload the Sheet. The **R2I** menu now has **"Apply guardrails (formatting + dropdowns)."**
+3. Reload the Sheet. The **R2I** menu now has **"Apply guardrails (formatting + dropdowns)"** and a combined **"Update everything (files + guardrails)"** at the top.
 4. Click it, authorize once, done. Re-run any time you add tabs, modules, or rows.
+
+> **One button for the team:** **R2I → Update everything (files + guardrails)** rebuilds the
+> Files manifest *and* re-applies all dropdowns/formatting in one click, with a single
+> summary. That's the only item Stephanie and Kelly need after a work session; the two
+> individual items are there for when you only want one.
 
 It **replaces** the conditional-formatting rules on each tab it touches (the script is
 the source of truth) and never deletes data. Tweak the colors in `G_COLORS` at the top of
