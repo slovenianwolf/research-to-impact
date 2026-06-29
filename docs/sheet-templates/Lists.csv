@@ -1,10 +1,10 @@
 "format","link_type","status","audience","priority","tier","nav_visible","section","practice",,"mod: Co-Planning","mod: Repeated Reading","mod: Routine Data Cycles","mod: Leading Implementation","mod: Stories & Spotlights","mod: Evidence & Impact","mod: R2I Library","mod: Site Assets"
-"Document","download","planned","Teacher","Must Have","IGNITE","yes","Co-Planning","Co-Planning",,"=IFERROR(FILTER(Modules!C2:C, Modules!A2:A=""Co-Planning""),"""")","=IFERROR(FILTER(Modules!C2:C, Modules!A2:A=""Repeated Reading""),"""")","=IFERROR(FILTER(Modules!C2:C, Modules!A2:A=""Routine Data Cycles""),"""")","=IFERROR(FILTER(Modules!C2:C, Modules!A2:A=""Leading Implementation""),"""")","=IFERROR(FILTER(Modules!C2:C, Modules!A2:A=""Stories & Spotlights""),"""")","=IFERROR(FILTER(Modules!C2:C, Modules!A2:A=""Evidence & Impact""),"""")","=IFERROR(FILTER(Modules!C2:C, Modules!A2:A=""R2I Library""),"""")","=IFERROR(FILTER(Modules!C2:C, Modules!A2:A=""Site Assets""),"""")"
-"Deck","external_link","in_progress","School Leader","Should Have","Own","hidden-until-live","Repeated Reading","Repeated Reading",,,,,,,,,
-"Tool","embed","ready","Network Leader","Nice to Have","Stories",,"Routine Data Cycles","Routine Data Cycles",,,,,,,,,
-"Protocol",,,"All","Nonessential","Evidence",,"Leading Implementation",,,,,,,,,,
-"Template",,,,,"R2I",,"Stories & Spotlights",,,,,,,,,,
-"Case Study",,,,,"Site",,"Evidence & Impact",,,,,,,,,,
-"Infographic",,,,,,,"R2I Library",,,,,,,,,,
+"Document","download","planned","Teacher","Must Have","IGNITE","yes","Co-Planning","Co-Planning",,"Overview","Overview","Overview","Core Content","Partner Spotlights","White Papers","Collaboration","Home & Impact"
+"Deck","external_link","in_progress","School Leader","Should Have","Own","hidden-until-live","Repeated Reading","Repeated Reading",,"Enabling Conditions","Infrastructure & Enabling Conditions","Infrastructure & Enabling Conditions","Coaching & Team Tools","School Case Studies","External Evaluation","Data for MTSS",
+"Tool","embed","ready","Network Leader","Nice to Have","Stories",,"Routine Data Cycles","Routine Data Cycles",,"Getting Started","Getting Started","Getting Started","Field Resources","From the Field","Annual Reports","Emotional Support",
+"Protocol",,,"All","Nonessential","Evidence",,"Leading Implementation",,,"Detailed Practice in Action","Detailed Practice in Action","Detailed Practice in Action","Stories",,"Equity-Gap Roadmap","Postsecondary",
+"Template",,,,,"R2I",,"Stories & Spotlights",,,"Measurement & Progress Monitoring","Measurement & Progress Monitoring","Measurement & Progress Monitoring",,,,"Secondary Literacy",
+"Case Study",,,,,"Site",,"Evidence & Impact",,,"Common Pitfalls & Barriers","Common Pitfalls & Barriers","Common Pitfalls & Barriers",,,,,
+"Infographic",,,,,,,"R2I Library",,,"Learning More","Learning More","Learning More",,,,,
 "Video",,,,,,,"Site Assets",,,,,,,,,,
 "Other",,,,,,,,,,,,,,,,,
