@@ -1,0 +1,10 @@
+"format","link_type","status","audience","priority","tier","nav_visible","section","practice",,"mod: Co-Planning","mod: Repeated Reading","mod: Routine Data Cycles","mod: Leading Implementation","mod: Stories & Spotlights","mod: Evidence & Impact","mod: R2I Library","mod: Site Assets"
+"Document","download","planned","Teacher","Must Have","IGNITE","yes","Co-Planning","Co-Planning",,"=IFERROR(FILTER(Modules!C2:C, Modules!A2:A=""Co-Planning""),"""")","=IFERROR(FILTER(Modules!C2:C, Modules!A2:A=""Repeated Reading""),"""")","=IFERROR(FILTER(Modules!C2:C, Modules!A2:A=""Routine Data Cycles""),"""")","=IFERROR(FILTER(Modules!C2:C, Modules!A2:A=""Leading Implementation""),"""")","=IFERROR(FILTER(Modules!C2:C, Modules!A2:A=""Stories & Spotlights""),"""")","=IFERROR(FILTER(Modules!C2:C, Modules!A2:A=""Evidence & Impact""),"""")","=IFERROR(FILTER(Modules!C2:C, Modules!A2:A=""R2I Library""),"""")","=IFERROR(FILTER(Modules!C2:C, Modules!A2:A=""Site Assets""),"""")"
+"Deck","external_link","in_progress","School Leader","Should Have","Own","hidden-until-live","Repeated Reading","Repeated Reading",,,,,,,,,
+"Tool","embed","ready","Network Leader","Nice to Have","Stories",,"Routine Data Cycles","Routine Data Cycles",,,,,,,,,
+"Protocol",,,"All","Nonessential","Evidence",,"Leading Implementation",,,,,,,,,,
+"Template",,,,,"R2I",,"Stories & Spotlights",,,,,,,,,,
+"Case Study",,,,,"Site",,"Evidence & Impact",,,,,,,,,,
+"Infographic",,,,,,,"R2I Library",,,,,,,,,,
+"Video",,,,,,,"Site Assets",,,,,,,,,,
+"Other",,,,,,,,,,,,,,,,,
