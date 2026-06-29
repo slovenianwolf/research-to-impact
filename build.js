@@ -328,13 +328,13 @@ async function main() {
   if (/^https?:\/\//i.test(heroImg)) seoImage = heroImg;
   else if (driveId(heroImg)) seoImage = imageUrl(heroImg);
   else if (heroImg && baseUrl) seoImage = `${baseUrl}/assets/${heroImg.replace(/^\/+/, '')}`;
-  const faviconSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#21344C"/><circle cx="16" cy="16" r="7" fill="#fc6e42"/></svg>';
   const seo = {
     '__SEO_TITLE__': escHtml((S.site_name || site.name || 'Research to Impact').trim()),
     '__SEO_DESC__': escHtml((site.tagline || site.hero_subhead || '').trim()),
     '__SEO_URL__': escHtml(baseUrl),
     '__SEO_IMAGE__': escHtml(seoImage),
-    '__FAVICON__': 'data:image/svg+xml,' + encodeURIComponent(faviconSvg),
+    // The site logo (Marshall CoLab mark), served from assets/ as the tab icon.
+    '__FAVICON__': 'assets/favicon.png',
   };
 
   // ----- inject + write -----
