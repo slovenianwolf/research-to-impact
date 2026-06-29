@@ -179,6 +179,7 @@ async function main() {
   const modRows = (await loadTab(MODULES_TAB, 'module_name')).map(m => ({
     section: canon(m.section), order: num(m.module_order),
     name: (m.module_name || '').trim(), intro: m.module_intro || '',
+    video: (m.module_video || '').trim(),
   })).filter(m => m.name);
   const modulesBySection = group(modRows, m => m.section);
 
@@ -191,6 +192,7 @@ async function main() {
       header_label: (r.header_label || '').trim(), tier: (r.tier || '').trim(),
       order: num(r.order), nav_visible: (r.nav_visible || '').trim(),
       intro: r.landing_intro || '', header_image: imageUrl(r.header_image),
+      landing_video: (r.landing_video || '').trim(),
       modules: (modulesBySection[name] || []).slice().sort((a, b) => a.order - b.order),
     };
   }).filter(s => s.name);
@@ -335,8 +337,8 @@ async function main() {
   // ----- shape exactly what the page render expects -----
   const sections = pageSections.map(s => ({
     name: s.name, intro: s.intro, header_image: s.header_image,
-    homepage: HOMEPAGE_TIERS.includes(s.tier),
-    modules: s.modules.map(m => ({ name: m.name, order: m.order, intro: m.intro })),
+    homepage: HOMEPAGE_TIERS.includes(s.tier), video: s.landing_video,
+    modules: s.modules.map(m => ({ name: m.name, order: m.order, intro: m.intro, video: m.video })),
   }));
   const DATA = { site, sections, nav, resources, storiesSection: storiesSec ? storiesSec.name : null };
 
