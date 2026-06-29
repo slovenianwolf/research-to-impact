@@ -10,12 +10,19 @@ Google Sheet  ──>  build.js  ──>  dist/index.html  ──>  Netlify  ─
  (your edits)      (template.html + sheet data)         (auto-deploy)
 ```
 
-- **template.html** — the site shell (design, fonts, search, page logic). The data
-  is a single placeholder, `__DATA__`, that the build fills in.
-- **build.js** — pulls each sheet tab as CSV, assembles the page data, and writes
-  `dist/index.html`. Prints a report plus warnings about any data problems.
+- **template.html** — the site shell (design, fonts, search, page logic). The build
+  fills in the data placeholder `__DATA__` and the SEO placeholders
+  (`__SEO_TITLE__`, `__SEO_DESC__`, `__SEO_URL__`, `__SEO_IMAGE__`, `__FAVICON__`).
+  Every view also has a shareable `#/` deep link (e.g. `#/Co-Planning/Getting Started`).
+- **build.js** — pulls each sheet tab as CSV, assembles the page data, normalizes
+  links/images, injects SEO/social meta, and writes `dist/index.html`. Prints a
+  report with warnings and (hard) errors. `STRICT=1` makes it exit non-zero on
+  errors (duplicate ids) — used by CI; the normal build stays lenient.
 - **netlify.toml** — tells Netlify to run `node build.js` and publish `dist/`.
 - **.github/workflows/rebuild.yml** — rebuilds nightly and on demand.
+- **.github/workflows/ci.yml** — on every push/PR, runs the build from fixtures in
+  strict mode, smoke-checks the rendered page, and posts the report to the run
+  summary, so a broken sheet/template can't merge silently.
 
 ## One-time setup
 
@@ -42,6 +49,12 @@ drives the site.
 
 ## Day-to-day
 
+> **Content editors:** see [`docs/editor-guide.md`](docs/editor-guide.md) for a
+> plain-language guide to every tab and column, how to add files/images/videos
+> (paste a Google Drive link into `link_url` / `video_url` / `image`), and the
+> recommended Google Sheets dropdowns. [`docs/aaae-public-goods-crosswalk.md`](docs/aaae-public-goods-crosswalk.md)
+> maps the grant's committed public goods to where they live on the site.
+
 - **Change content** → edit the sheet. It refreshes on the **nightly rebuild**.
 - **Need it live now** → GitHub repo → *Actions → Scheduled rebuild → Run workflow*
   (or POST the build hook URL). Either way the site rebuilds in ~1 minute.
@@ -65,18 +78,32 @@ node build.js
 
 - Reads tabs: `Site`, `Sections`, `Modules`, and one resource tab per section
   (`Co-Planning`, `Repeated Reading`, `Routine Data Cycles`,
-  `Leading Implementation`, `R2I Library`, `Site Assets`). Instructions and Column
-  Guide tabs are ignored.
+  `Leading Implementation`, `Stories & Spotlights`, `Evidence & Impact`,
+  `R2I Library`, `Site Assets`). Instructions and Column Guide tabs are ignored.
 - A resource's **section is the tab it lives on** (resource rows have no `section`
   column).
 - **Nav** is built from the Sections tab: `header_label` groups the items,
   `tier` and `order` place them, `nav_visible = hidden-until-live` keeps a section
   out of the public nav. Practice toolkits cluster, then Leading Implementation,
-  then the Library dropdown; About sits on the right.
-- A section appears as a homepage card + browsable pages only when it's a live nav
-  section (tier IGNITE/Own, not hidden). The Library and Site Assets resources are
-  skipped until their section's `nav_visible` is set to `yes` — then they appear
-  automatically, no code change.
+  then the secondary sections (Stories & Spotlights, Evidence & Impact) and the
+  Library dropdown; About sits on the right.
+- **Two prominence tiers.** `tier` controls how a section surfaces:
+  - **Homepage tiers** (`IGNITE`, `Own`) — practice toolkits + Leading
+    Implementation — appear as homepage cards *and* browsable pages, with intro
+    videos. This is the practitioner-first front door.
+  - **Secondary tiers** (`Stories`, `Evidence`) — Stories & Spotlights and
+    Evidence & Impact — are browsable and in the nav, but deliberately *not* on
+    the homepage and without video bars. This is where research/funder-facing
+    goods (white papers, evaluation, annual reports, roadmap) live without
+    cluttering the practitioner experience.
+  - The Library and Site Assets resources are skipped until their section's
+    `nav_visible` is set to `yes` — then they appear automatically, no code change.
+- **Optional email ask on downloads.** Set `gated = TRUE` on a resource row to show
+  a soft, *skippable* "email to download" prompt (the toolkits stay open; this is
+  for the research tier). It routes to HubSpot once `hubspot_portal_id` and
+  `hubspot_form_id` are filled in on the `Site` tab; until then a harmless
+  placeholder shows and "just download" still works. No external script loads until
+  those IDs are set.
 - **Watch the warnings.** The build flags published focal cards with no summary,
   resources pointing at a module that doesn't exist, and blank Site settings. Fix
   these in the sheet.

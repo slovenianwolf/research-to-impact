@@ -29,14 +29,25 @@ const SITE_TAB = 'Site', SECTIONS_TAB = 'Sections', MODULES_TAB = 'Modules';
 // rows carry no `section` column), so we map tab name -> section here.
 const RESOURCE_TABS = [
   'Co-Planning', 'Repeated Reading', 'Routine Data Cycles',
-  'Leading Implementation', 'R2I Library', 'Site Assets',
+  'Leading Implementation', 'Stories & Spotlights', 'Evidence & Impact',
+  'R2I Library', 'Site Assets',
 ];
+// Tiers that render as browsable section + module pages (and appear in the nav).
+const PAGE_TIERS = ['IGNITE', 'Own', 'Stories', 'Evidence'];
+// Of those, the tiers that also get a card on the homepage. Practitioner-first:
+// the practice toolkits and Leading Implementation are featured; Stories and
+// Evidence are browsable + in nav, but deliberately NOT on the homepage.
+const HOMEPAGE_TIERS = ['IGNITE', 'Own'];
 // The sheet labels the library differently across tabs; normalize to the
 // canonical section_name from the Sections tab.
 const SECTION_ALIASES = { 'R2I Library': 'Research-to-Impact Library' };
 const canon = s => SECTION_ALIASES[(s || '').trim()] || (s || '').trim();
 
-const warn = [], info = [], tabReport = [];
+const warn = [], info = [], tabReport = [], err = [];
+// STRICT=1 makes the build fail (exit 1) when there are hard errors. CI runs
+// strict so mistakes can't merge; the Netlify/nightly build stays lenient so a
+// single bad row never takes the whole site offline.
+const STRICT = String(process.env.STRICT || '').trim() === '1';
 
 // ---------------------------------------------------------------- helpers
 const TRUE = v => String(v == null ? '' : v).trim().toUpperCase() === 'TRUE';
@@ -48,6 +59,31 @@ function isRecent(dateStr, days = 30) {
 }
 function group(arr, keyFn) {
   const out = {}; for (const x of arr) { const k = keyFn(x); (out[k] = out[k] || []).push(x); } return out;
+}
+
+// ---- link/asset normalization ----
+// Editors paste a Google Drive "share" link (or any URL) into the sheet. Pull the
+// file id out of the common Drive URL shapes so we can build a clean direct link.
+function driveId(url) {
+  const s = String(url || '');
+  const m = s.match(/\/file\/d\/([-\w]{20,})/) || s.match(/[?&]id=([-\w]{20,})/);
+  return m ? m[1] : null;
+}
+// A link to open/download a file. Drive -> the file's view page (lets the user
+// preview or download); any other URL passes through; a bare filename is treated
+// as a path in the repo's assets/ folder. Blank stays blank.
+function fileUrl(url) {
+  const s = String(url || '').trim(); if (!s) return '';
+  const id = driveId(s); if (id) return `https://drive.google.com/file/d/${id}/view`;
+  if (/^https?:\/\//i.test(s)) return s;
+  return 'assets/' + s.replace(/^\/+/, '');
+}
+// An image src. Drive -> a sized thumbnail (renders inline); other URLs/paths as above.
+function imageUrl(url) {
+  const s = String(url || '').trim(); if (!s) return '';
+  const id = driveId(s); if (id) return `https://drive.google.com/thumbnail?id=${id}&sz=w1200`;
+  if (/^https?:\/\//i.test(s)) return s;
+  return 'assets/' + s.replace(/^\/+/, '');
 }
 
 // Minimal RFC-4180-ish CSV parser: handles quoted fields, embedded commas,
@@ -125,6 +161,12 @@ async function main() {
     tagline: S.tagline, hero_headline: S.hero_headline, hero_subhead: S.hero_subhead,
     cta: S.hero_cta_label, footer: S.footer_attribution, license: S.license_line,
     about_story: S.about_story, about_ignite: S.about_ignite, about_practices: S.about_practices,
+    about_network: S.about_network,
+    // Optional HubSpot capture (soft email ask on gated resources). Blank = a
+    // placeholder shows instead of a live form, so nothing breaks before setup.
+    hubspot_portal: (S.hubspot_portal_id || '').trim(),
+    hubspot_form: (S.hubspot_form_id || '').trim(),
+    hubspot_region: (S.hubspot_region || 'na1').trim(),
   };
   ['tagline','hero_headline','hero_subhead','cta','footer','license','about_story','about_ignite','about_practices']
     .forEach(k => { if (!String(site[k] || '').trim()) warn.push(`Site setting blank: "${k}" (page area may render empty).`); });
@@ -144,7 +186,7 @@ async function main() {
       name, section_id: (r.section_id || '').trim(),
       header_label: (r.header_label || '').trim(), tier: (r.tier || '').trim(),
       order: num(r.order), nav_visible: (r.nav_visible || '').trim(),
-      intro: r.landing_intro || '',
+      intro: r.landing_intro || '', header_image: imageUrl(r.header_image),
       modules: (modulesBySection[name] || []).slice().sort((a, b) => a.order - b.order),
     };
   }).filter(s => s.name);
@@ -153,9 +195,32 @@ async function main() {
   // the practice toolkits (tier IGNITE) and Leading Implementation (tier Own),
   // unless explicitly held out of nav.
   const pageSections = allSections
-    .filter(s => ['IGNITE', 'Own'].includes(s.tier) && s.nav_visible !== 'hidden-until-live')
+    .filter(s => PAGE_TIERS.includes(s.tier) && s.nav_visible !== 'hidden-until-live')
     .sort((a, b) => a.order - b.order);
   const pageNames = new Set(pageSections.map(s => s.name));
+
+  // ----- Files manifest (optional): id -> published file URL -----
+  // Maintained by the Apps Script that indexes the Drive published-files folder,
+  // so editors attach a file just by naming it after the id — no URL pasting.
+  // See docs/file-hosting.md. The tab is optional; without it, downloads simply
+  // don't resolve (and a warning is emitted per published item).
+  const filesMap = {};
+  try {
+    const fileRows = await loadTab('Files', 'id');
+    fileRows.forEach(r => {
+      const id = (r.id || '').trim();
+      if (id) filesMap[id] = { url: fileUrl(r.url), mime: (r.mime || '').trim() };
+    });
+  } catch (e) { /* Files tab is optional */ }
+  // Resolve a resource's link: an explicit link_url wins (external_link); otherwise
+  // a 'download' resolves to its file in the manifest by id.
+  const linkFor = r => {
+    const explicit = fileUrl(r.link_url);
+    if (explicit) return explicit;
+    const id = (r.id || '').trim();
+    if (String(r.link_type || '').trim() === 'download' && filesMap[id]) return filesMap[id].url;
+    return '';
+  };
 
   // ----- Resources (section injected from the tab) -----
   const resources = []; let dropped = 0;
@@ -172,9 +237,14 @@ async function main() {
         title: (r.title || '').trim(), format: (r.format || 'Other').trim(),
         focal: TRUE(r.focal), focal_order: num(r.focal_order) || '',
         published: TRUE(r.published), status: (r.status || '').trim(),
+        gated: TRUE(r.gated),
+        practice: (r.practice || '').trim(),
         summary: r.summary || '', who_for: r.who_for || '',
         isnew: isRecent(r.date_published),
         video: String(r.link_type || '').trim() === 'embed' || !!(r.video_url || '').trim(),
+        link: linkFor(r),
+        video_url: fileUrl(r.video_url),
+        image: imageUrl(r.image),
       };
       if (!pageNames.has(rec.section)) { dropped++; continue; }
       resources.push(rec);
@@ -191,6 +261,32 @@ async function main() {
   resources.filter(r => r.published && r.focal && !String(r.summary).trim())
     .forEach(r => warn.push(`Published focal resource "${r.id}" has no summary (card shows no description).`));
 
+  // Hard errors (fail the build under STRICT): duplicate ids break rendering.
+  const seenId = new Set();
+  resources.forEach(r => {
+    if (seenId.has(r.id)) err.push(`Duplicate resource id "${r.id}" — ids must be unique across the whole site.`);
+    else seenId.add(r.id);
+  });
+
+  // Soft warnings: invalid enumerations degrade gracefully but signal a typo.
+  const FORMATS = new Set(['Document', 'Deck', 'Tool', 'Protocol', 'Template', 'Case Study', 'Infographic', 'Video', 'Other']);
+  resources.forEach(r => {
+    if (r.format && !FORMATS.has(r.format))
+      warn.push(`Resource "${r.id}" has unknown format "${r.format}" (uses a generic icon). Allowed: ${[...FORMATS].join(', ')}.`);
+  });
+  const TIERS = new Set(['IGNITE', 'Own', 'Stories', 'Evidence', 'R2I', 'Site']);
+  allSections.forEach(s => {
+    if (s.tier && !TIERS.has(s.tier))
+      warn.push(`Section "${s.name}" has unknown tier "${s.tier}" (won't surface anywhere). Allowed: ${[...TIERS].join(', ')}.`);
+  });
+  resources.filter(r => r.published && r.gated && !r.link)
+    .forEach(r => warn.push(`Gated resource "${r.id}" resolves to no file (the email ask leads nowhere).`));
+  // Once a Files manifest exists, flag any published item that resolves to nothing.
+  if (Object.keys(filesMap).length) {
+    resources.filter(r => r.published && !r.video && !r.link)
+      .forEach(r => warn.push(`Published resource "${r.id}" resolves to no file — name a file after this id in the published folder, or set a link_url.`));
+  }
+
   // ----- nav metadata (data-driven grouping + dividers) -----
   const groups = [];
   pageSections.forEach(s => {
@@ -199,6 +295,10 @@ async function main() {
   });
   const libSec = allSections.find(s => s.tier === 'R2I');
   const aboutSec = allSections.find(s => s.tier === 'Site');
+  // The Stories section is woven into the toolkit pages: a story tagged with a
+  // `practice` surfaces on that practice's page. We pass its name so the template
+  // can find those resources without hardcoding the section title.
+  const storiesSec = allSections.find(s => s.tier === 'Stories');
   const nav = {
     groups,
     library: libSec ? {
@@ -211,18 +311,49 @@ async function main() {
 
   // ----- shape exactly what the page render expects -----
   const sections = pageSections.map(s => ({
-    name: s.name, intro: s.intro,
+    name: s.name, intro: s.intro, header_image: s.header_image,
+    homepage: HOMEPAGE_TIERS.includes(s.tier),
     modules: s.modules.map(m => ({ name: m.name, order: m.order, intro: m.intro })),
   }));
-  const DATA = { site, sections, nav, resources };
+  const DATA = { site, sections, nav, resources, storiesSection: storiesSec ? storiesSec.name : null };
+
+  // ----- SEO / social metadata (build-time so crawlers and link unfurlers,
+  // which don't run our JS, see real title/description/image) -----
+  const escHtml = s => String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const domain = (S.domain || '').trim().replace(/^https?:\/\//, '').replace(/\/+$/, '');
+  const baseUrl = domain ? `https://${domain}` : '';
+  const heroImg = (S.hero_image || '').trim();
+  let seoImage = '';
+  if (/^https?:\/\//i.test(heroImg)) seoImage = heroImg;
+  else if (driveId(heroImg)) seoImage = imageUrl(heroImg);
+  else if (heroImg && baseUrl) seoImage = `${baseUrl}/assets/${heroImg.replace(/^\/+/, '')}`;
+  const faviconSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#21344C"/><circle cx="16" cy="16" r="7" fill="#fc6e42"/></svg>';
+  const seo = {
+    '__SEO_TITLE__': escHtml((S.site_name || site.name || 'Research to Impact').trim()),
+    '__SEO_DESC__': escHtml((site.tagline || site.hero_subhead || '').trim()),
+    '__SEO_URL__': escHtml(baseUrl),
+    '__SEO_IMAGE__': escHtml(seoImage),
+    '__FAVICON__': 'data:image/svg+xml,' + encodeURIComponent(faviconSvg),
+  };
 
   // ----- inject + write -----
   if (!fs.existsSync(TEMPLATE)) throw new Error(`Template not found: ${TEMPLATE}`);
   const tpl = fs.readFileSync(TEMPLATE, 'utf8');
   if (!tpl.includes('__DATA__')) throw new Error('template.html is missing the __DATA__ placeholder.');
-  const html = tpl.replace('__DATA__', JSON.stringify(DATA));
+  let html = tpl.replace('__DATA__', JSON.stringify(DATA));
+  for (const [k, v] of Object.entries(seo)) html = html.split(k).join(v);
   fs.mkdirSync(OUT_DIR, { recursive: true });
   fs.writeFileSync(path.join(OUT_DIR, 'index.html'), html);
+
+  // Copy committed static assets (images, etc.) into the publish dir, so links
+  // like assets/foo.jpg resolve. Netlify publishes dist/, so assets must land
+  // there too. Editors who use Google Drive links don't need this at all.
+  const ASSET_DIR = process.env.ASSET_DIR || 'assets';
+  if (fs.existsSync(ASSET_DIR)) {
+    fs.cpSync(ASSET_DIR, path.join(OUT_DIR, 'assets'), { recursive: true });
+    info.push(`Copied ${ASSET_DIR}/ into ${path.join(OUT_DIR, 'assets')}.`);
+  }
 
   // ----- report -----
   const live = resources.filter(r => r.published).length;
@@ -234,6 +365,12 @@ async function main() {
   if (info.length) { console.log(`\nINFO:`); info.forEach(m => console.log('  - ' + m)); }
   if (warn.length) { console.log(`\nWARNINGS (${warn.length}):`); warn.forEach(m => console.log('  ! ' + m)); }
   else console.log('\nNo warnings.');
+  if (err.length) { console.log(`\nERRORS (${err.length}):`); err.forEach(m => console.log('  X ' + m)); }
+
+  if (STRICT && err.length) {
+    console.error(`\nSTRICT mode: ${err.length} error(s) — failing build.`);
+    process.exit(1);
+  }
 }
 
 main().catch(e => { console.error('\nBUILD FAILED: ' + e.message); process.exit(1); });
