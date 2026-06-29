@@ -30,6 +30,7 @@ function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu('R2I')
     .addItem('Rebuild Files manifest', 'rebuildFilesManifest')
+    .addItem('Apply guardrails (formatting + dropdowns)', 'applyGuardrails')
     .addToUi();
 }
 
