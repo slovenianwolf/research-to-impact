@@ -1,16 +1,18 @@
 /**
  * Research to Impact — Files manifest builder (Google Apps Script).
  *
- * Indexes the published-files Drive folder and writes a 'Files' tab that maps each
- * resource id -> its public file URL. This lets editors attach a file simply by
- * naming it after the resource id and dropping it in the folder — no URL pasting.
- * The website build reads the 'Files' tab to wire up every Download button.
+ * Indexes the published-files Drive folder (and all its subfolders) and writes a
+ * 'Files' tab that maps each resource id -> its public file URL. This lets editors
+ * attach a file simply by naming it after the resource id and dropping it in the
+ * right section subfolder — no URL pasting. The website build reads the 'Files'
+ * tab to wire up every Download button.
  *
  * SETUP (one time):
  *   1. In the Sheet: Extensions -> Apps Script. Paste this whole file. Save.
- *   2. Set PUBLISHED_FOLDER_ID below to the Drive id of your published-files
- *      folder ("01 - PUBLISHED"). It's the long string in the folder's URL:
- *      https://drive.google.com/drive/folders/<THIS_PART>
+ *   2. PUBLISHED_FOLDER_ID below is already set to this project's "01 - Published"
+ *      folder. (If it ever moves, it's the long string in the folder URL:
+ *      https://drive.google.com/drive/folders/<THIS_PART>.) The script walks this
+ *      folder AND every subfolder inside it, so point it at the top "01 - Published".
  *   3. Reload the Sheet. A new "R2I" menu appears.
  *   4. Run R2I -> Rebuild Files manifest. Authorize when prompted (it needs Drive
  *      + Sheet access). It writes/updates the 'Files' tab.
@@ -22,7 +24,7 @@
  * Files that don't start with a known id are skipped and listed back to you.
  */
 
-var PUBLISHED_FOLDER_ID = 'PASTE_DRIVE_FOLDER_ID_HERE';
+var PUBLISHED_FOLDER_ID = '1MdfLG7U1AafL4so8dRh1EIsdyjvjyYdp'; // "01 - Published"
 
 function onOpen() {
   SpreadsheetApp.getUi()
@@ -35,11 +37,11 @@ function rebuildFilesManifest() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var ids = collectResourceIds_(ss);
   var folder = DriveApp.getFolderById(PUBLISHED_FOLDER_ID);
+  var all = listFilesRecursive_(folder, []);
   var rows = [['id', 'url', 'mime', 'filename']];
   var unmatched = [];
-  var files = folder.getFiles();
-  while (files.hasNext()) {
-    var f = files.next();
+  for (var i = 0; i < all.length; i++) {
+    var f = all[i];
     var name = f.getName();
     var id = bestIdPrefix_(name, ids);
     if (!id) { unmatched.push(name); continue; }
@@ -50,6 +52,15 @@ function rebuildFilesManifest() {
   var msg = (rows.length - 1) + ' file(s) mapped to ids.';
   if (unmatched.length) msg += '\n\nSkipped (filename did not start with a known id):\n- ' + unmatched.join('\n- ');
   SpreadsheetApp.getUi().alert('Files manifest rebuilt', msg, SpreadsheetApp.getUi().ButtonSet.OK);
+}
+
+// Walk a folder and every subfolder, collecting all files.
+function listFilesRecursive_(folder, out) {
+  var files = folder.getFiles();
+  while (files.hasNext()) out.push(files.next());
+  var subs = folder.getFolders();
+  while (subs.hasNext()) listFilesRecursive_(subs.next(), out);
+  return out;
 }
 
 // The longest resource id that the filename starts with, at a word boundary,
