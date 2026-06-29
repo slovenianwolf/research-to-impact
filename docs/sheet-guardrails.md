@@ -1,8 +1,41 @@
-# Sheet guardrails — make it user-proof (setup checklist)
+# Sheet guardrails — make it user-proof
 
-A one-time setup that makes the master sheet safe for the content team. Work straight
-down this list. Most of it is dropdowns; the rest is number/date checks, a few
-"flag mistakes in red" rules, and locking the one dangerous column.
+A one-time setup that makes the master sheet safe for the content team: dropdowns,
+number/date checks, "flag mistakes in red/green" formatting, and locking the one
+dangerous column.
+
+**Two ways to do it.** The script does everything in one click and is re-runnable; the
+manual checklist below is the same rules done by hand if you ever want to tweak one.
+
+---
+
+## Option 1 (recommended): one-click script
+
+The repo ships an Apps Script (`docs/apps-script/Guardrails.gs`) that applies **every**
+dropdown and **all** the conditional formatting across the whole workbook at once —
+green TRUEs, the status traffic light, amber "fill this in" nudges, red over-limit and
+duplicate-id flags, the header color legend, and the per-tab `module` dropdown. It reads
+its values from the **Lists** tab and targets columns **by header name**, so the
+`gated`/`note` column-order difference on Evidence & Impact / Stories doesn't trip it up.
+
+**Setup:**
+1. Import the Lists tab if you haven't: **File → Import → Upload `docs/sheet-templates/Lists.csv` → Insert new sheet**, then rename the tab **`Lists`**.
+2. **Extensions → Apps Script.** Add a file and paste in `Guardrails.gs` (keep `PublishFiles.gs` too). **Save.**
+3. Reload the Sheet. The **R2I** menu now has **"Apply guardrails (formatting + dropdowns)."**
+4. Click it, authorize once, done. Re-run any time you add tabs, modules, or rows.
+
+It **replaces** the conditional-formatting rules on each tab it touches (the script is
+the source of truth) and never deletes data. Tweak the colors in `G_COLORS` at the top of
+the file, or which columns count as required/recommended/auto in the lists under it.
+
+Still do **A5 (lock `published`)** by hand — protected ranges aren't set by the script.
+
+---
+
+## Option 2: manual checklist
+
+Work straight down this list. Most of it is dropdowns; the rest is number/date checks, a
+few "flag mistakes in red" rules, and locking the one dangerous column.
 
 ## How to add a dropdown (the move you'll repeat)
 1. Select the column range (e.g. click the column letter, or type the range).
