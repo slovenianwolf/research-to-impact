@@ -62,7 +62,7 @@ These are the columns the site actually uses. Fill these in:
 | `summary` | One- or two-sentence description on the card. | Plain text. Required for published featured cards. |
 | `who_for` | Short "who this is for" line. | Plain text, e.g. `Leaders, coaches`. |
 | `link_url` | The file or page the Download button opens. | A Google Drive share link (preferred) or any URL. See **Adding files** below. |
-| `video_url` | The video the Watch button opens. | A Drive/Vimeo/YouTube link. |
+| `video_url` | The Vimeo video the Watch button plays (in-page). | A Vimeo link (preferred). A non-Vimeo link still works but opens in a new tab. |
 | `link_type` | Set to `embed` to mark a resource as a video. | `embed` or blank. (A `video_url` also marks it as a video.) |
 | `image` | Optional image on the card. | A Drive image link or URL. See **Adding images**. |
 | `date_published` | Drives the "New" badge (auto for ~30 days). | A date, or blank. |
@@ -103,10 +103,23 @@ people hit a "request access" wall (the Apps Script sets this for you).
 Same idea: a Drive image link or any image URL in the `image` column. Drive links
 are turned into an inline thumbnail automatically. Leave blank for no image.
 
-## Adding video (Watch button)
+## Adding video (plays in-page)
 
-Put the link in `video_url` (Drive, Vimeo, or YouTube). The card's button becomes
-"Watch."
+Videos live on **Vimeo** and play right on the page — no jumping off-site.
+
+- **A video resource** (its own card with a Watch button): set `format = Video`,
+  `link_type = embed`, and paste the Vimeo link into `video_url`. Watch opens an
+  in-page player.
+- **A section intro video**: put a Vimeo link in `landing_video` on the **Sections**
+  tab — it plays at the top of that toolkit/practice page.
+- **A module intro video**: put a Vimeo link in `module_video` on the **Modules**
+  tab — it plays at the top of that module's page.
+
+**Vimeo tips:** keep the Research to Impact videos in their own Vimeo folder, each
+named starting with the resource id (same rule as files). Set each to **Hide from
+Vimeo (unlisted)** so it stays off your public Vimeo profile but still plays on the
+site — the privacy link (`vimeo.com/ID/HASH`) keeps working, hash and all. Any
+non-Vimeo link (e.g. YouTube) still works but opens in a new tab instead of inline.
 
 ---
 
@@ -133,6 +146,7 @@ the **Site** tab. Until then a harmless placeholder shows and downloads still wo
 | `order` | Left-to-right / top-to-bottom order. | a number |
 | `nav_visible` | `hidden-until-live` keeps a section out of the public nav until you're ready. | `yes` / `hidden-until-live` |
 | `landing_intro` | The intro paragraph on the section page. | text |
+| `landing_video` | Optional Vimeo video that plays at the top of the section page. | A Vimeo link, or blank. |
 | `header_image` | Optional banner image at the top of the section page. | A Drive image link, a URL, or a bare filename in `assets/`. Leave blank for none. |
 
 **What each `tier` does:**
@@ -154,6 +168,7 @@ code change needed.
 | `module_order` | Order of modules within the section. |
 | `module_name` | The module's name — **resource rows reference this exactly.** |
 | `module_intro` | Optional intro on the module page. |
+| `module_video` | Optional Vimeo video that plays at the top of the module page. |
 
 ## Site tab
 
