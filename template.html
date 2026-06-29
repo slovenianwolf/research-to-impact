@@ -290,6 +290,7 @@ nav.main .nav-div{width:1px;height:20px;background:rgba(255,255,255,.22);margin:
 .skiplink{position:absolute;left:-9999px;top:0;background:#21344C;color:#fff;padding:10px 14px;border-radius:0 0 8px 0;z-index:200;text-decoration:none}
 .skiplink:focus{left:0}
 #app:focus{outline:none}
+.ddmenu .dddiv{height:1px;background:var(--line);margin:6px 8px}
 </style>
 <script>
 const DATA = __DATA__;
@@ -319,13 +320,15 @@ function navHtml(){
  const div='<span class="nav-div" aria-hidden="true"></span>';
  const nav=DATA.nav||{groups:[],library:null,about:null};
  let out=(nav.groups||[]).map(g=>(g.sections||[]).map(link).join('')).filter(Boolean).join(div);
- if(nav.library){
-  const lib=nav.library;
-  const items=(lib.collections||[]).map(c=>lib.visible
+ const lib=nav.library;
+ if(lib && ((lib.sections||[]).length || (lib.collections||[]).length)){
+  const secLinks=(lib.sections||[]).map(s=>`<a href="#" data-go="section:${esc(s.name)}" class="${view.section===s.name?'active':''}">${esc(s.name)}</a>`).join('');
+  const colItems=(lib.collections||[]).map(c=>lib.collectionsVisible
     ? `<a href="#" data-go="section:${esc(lib.name)}">${esc(c)}</a>`
     : `<a href="#" data-dd-soon="1">${esc(c)}<span class="ddsoon">soon</span></a>`).join('');
-  const head=lib.visible?'':'<div class="ddhead">Second wave &middot; coming later</div>';
-  out+=div+`<div class="dd" id="libDD"><a href="#" data-dd="lib">${esc(lib.name)} <span class="caret">&#9662;</span></a><div class="ddmenu">${head}${items}</div></div>`;
+  const divider=(secLinks && colItems)?'<div class="dddiv" aria-hidden="true"></div>':'';
+  const colHead=(colItems && !lib.collectionsVisible)?'<div class="ddhead">Practice collections &middot; coming later</div>':'';
+  out+=div+`<div class="dd" id="libDD"><a href="#" data-dd="lib">${esc(lib.name)} <span class="caret">&#9662;</span></a><div class="ddmenu">${secLinks}${divider}${colHead}${colItems}</div></div>`;
  }
  if(nav.about){
   out+=`<a href="#" data-go="about" class="nav-about ${view.type==='about'?'active':''}">${esc(nav.about.name)}</a>`;
