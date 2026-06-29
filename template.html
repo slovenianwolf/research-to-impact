@@ -545,7 +545,7 @@ document.getElementById('findBtn').addEventListener('click',()=>askOpen(true));
 document.addEventListener('click',e=>{
  if(e.target.closest('[data-ask-close]')){askOpen(false);return;}
  const soon=e.target.closest('[data-dd-soon]');
- if(soon){e.preventDefault();toast('This collection arrives with the Research-to-Impact Library, the second wave after launch.');return;}
+ if(soon){e.preventDefault();toast('These collections arrive in the second wave after launch.');return;}
  const tog=e.target.closest('[data-dd]');
  const all=document.querySelectorAll('nav.main .dd');
  if(tog){e.preventDefault();const par=tog.closest('.dd');all.forEach(d=>{if(d!==par)d.classList.remove('open')});if(par)par.classList.toggle('open');return;}

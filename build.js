@@ -299,7 +299,7 @@ async function main() {
   // "Evidence & Stories" dropdown; the cross-cutting R2I collections get their own.
   const TOP_NAV_TIERS = ['IGNITE', 'Own'];
   const SECONDARY_NAV_LABEL = 'Evidence & Stories';
-  const COLLECTIONS_NAV_LABEL = 'Research-to-Impact Collections';
+  const COLLECTIONS_NAV_LABEL = 'Collections';
   const groups = [];
   pageSections.filter(s => TOP_NAV_TIERS.includes(s.tier)).forEach(s => {
     const g = groups.find(x => x.label === s.header_label);
