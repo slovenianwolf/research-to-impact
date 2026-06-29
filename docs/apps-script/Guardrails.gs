@@ -64,12 +64,21 @@ var G_LIMITS = { title: 60, summary: 200, who_for: 120 };
 var G_SKIP_TABS = { 'Instructions': 1, 'Column Guide': 1, 'Files': 1, 'Lists': 1, 'Dashboard': 1, 'Site': 1 };
 
 function applyGuardrails() {
+  var report = applyGuardrails_();
+  if (report === null) return; // already alerted (no Lists tab)
+  var ui = SpreadsheetApp.getUi();
+  ui.alert('Guardrails applied', report, ui.ButtonSet.OK);
+}
+
+// Core: applies every dropdown + all conditional formatting and returns a summary
+// string (no dialog). Returns null if it can't run (e.g. no Lists tab) after alerting.
+function applyGuardrails_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var ui = SpreadsheetApp.getUi();
   var lists = ss.getSheetByName('Lists');
   if (!lists) {
     ui.alert('No "Lists" tab found', 'Import docs/sheet-templates/Lists.csv as a tab named "Lists", then run this again.', ui.ButtonSet.OK);
-    return;
+    return null;
   }
   var report = [];
   ss.getSheets().forEach(function (sh) {
@@ -92,7 +101,7 @@ function applyGuardrails() {
     }
     report.push((isResource ? '✓ ' : '· ') + name + ': ' + drops + ' dropdown column(s)' + (isResource ? ' + formatting' : ''));
   });
-  ui.alert('Guardrails applied', report.join('\n'), ui.ButtonSet.OK);
+  return report.join('\n');
 }
 
 // ---- column-letter helpers ----

@@ -7,8 +7,14 @@
  * right section subfolder — no URL pasting. The website build reads the 'Files'
  * tab to wire up every Download button.
  *
+ * This file also owns the "R2I" menu shared with Guardrails.gs. The menu's top item,
+ * "Update everything (files + guardrails)", rebuilds the manifest AND re-applies all
+ * dropdowns/formatting in one click (calls applyGuardrails_ in Guardrails.gs) — the
+ * one button to press after editing. The two items below it run each step alone.
+ *
  * SETUP (one time):
  *   1. In the Sheet: Extensions -> Apps Script. Paste this whole file. Save.
+ *      (Add Guardrails.gs as a second file so "Update everything" works.)
  *   2. PUBLISHED_FOLDER_ID below is already set to this project's "01 - Published"
  *      folder. (If it ever moves, it's the long string in the folder URL:
  *      https://drive.google.com/drive/folders/<THIS_PART>.) The script walks this
@@ -29,12 +35,33 @@ var PUBLISHED_FOLDER_ID = '1MdfLG7U1AafL4so8dRh1EIsdyjvjyYdp'; // "01 - Publishe
 function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu('R2I')
+    .addItem('Update everything (files + guardrails)', 'updateEverything')
+    .addSeparator()
     .addItem('Rebuild Files manifest', 'rebuildFilesManifest')
     .addItem('Apply guardrails (formatting + dropdowns)', 'applyGuardrails')
     .addToUi();
 }
 
+// One click that does both, in the right order (manifest first so guardrails sees any
+// new ids), with a single summary at the end. Use this after a work session; the two
+// items below are there for when you only need one.
+function updateEverything() {
+  var ui = SpreadsheetApp.getUi();
+  var files = rebuildFilesManifest_();
+  var guard = applyGuardrails_();
+  if (guard === null) { return; } // applyGuardrails_ already alerted (e.g. no Lists tab)
+  ui.alert('Update complete',
+    'FILES MANIFEST\n' + files + '\n\nGUARDRAILS\n' + guard,
+    ui.ButtonSet.OK);
+}
+
 function rebuildFilesManifest() {
+  var ui = SpreadsheetApp.getUi();
+  ui.alert('Files manifest rebuilt', rebuildFilesManifest_(), ui.ButtonSet.OK);
+}
+
+// Core: rebuilds the Files tab and returns a summary string (no dialog).
+function rebuildFilesManifest_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var ids = collectResourceIds_(ss);
   var folder = DriveApp.getFolderById(PUBLISHED_FOLDER_ID);
@@ -52,7 +79,7 @@ function rebuildFilesManifest() {
   writeSheet_(ss, 'Files', rows);
   var msg = (rows.length - 1) + ' file(s) mapped to ids.';
   if (unmatched.length) msg += '\n\nSkipped (filename did not start with a known id):\n- ' + unmatched.join('\n- ');
-  SpreadsheetApp.getUi().alert('Files manifest rebuilt', msg, SpreadsheetApp.getUi().ButtonSet.OK);
+  return msg;
 }
 
 // Walk a folder and every subfolder, collecting all files.
