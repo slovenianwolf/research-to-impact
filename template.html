@@ -318,18 +318,24 @@ function availCount(sec,mod){return resOf(sec,mod).filter(r=>r.published).length
 function navHtml(){
  const link=name=>`<a href="#" data-go="section:${name}" class="${view.section===name?'active':''}">${esc(name)}</a>`;
  const div='<span class="nav-div" aria-hidden="true"></span>';
- const nav=DATA.nav||{groups:[],library:null,about:null};
- let out=(nav.groups||[]).map(g=>(g.sections||[]).map(link).join('')).filter(Boolean).join(div);
- const lib=nav.library;
- if(lib && ((lib.sections||[]).length || (lib.collections||[]).length)){
-  const secLinks=(lib.sections||[]).map(s=>`<a href="#" data-go="section:${esc(s.name)}" class="${view.section===s.name?'active':''}">${esc(s.name)}</a>`).join('');
-  const colItems=(lib.collections||[]).map(c=>lib.collectionsVisible
-    ? `<a href="#" data-go="section:${esc(lib.name)}">${esc(c)}</a>`
-    : `<a href="#" data-dd-soon="1">${esc(c)}<span class="ddsoon">soon</span></a>`).join('');
-  const divider=(secLinks && colItems)?'<div class="dddiv" aria-hidden="true"></div>':'';
-  const colHead=(colItems && !lib.collectionsVisible)?'<div class="ddhead">Practice collections &middot; coming later</div>':'';
-  out+=div+`<div class="dd" id="libDD"><a href="#" data-dd="lib">${esc(lib.name)} <span class="caret">&#9662;</span></a><div class="ddmenu">${secLinks}${divider}${colHead}${colItems}</div></div>`;
+ const nav=DATA.nav||{groups:[],secondary:null,collections:null,about:null};
+ const parts=(nav.groups||[]).map(g=>(g.sections||[]).map(link).join('')).filter(Boolean);
+ // Evidence & Stories — the live secondary sections (Stories & Spotlights, Evidence & Impact)
+ const sec=nav.secondary;
+ if(sec && (sec.sections||[]).length){
+  const links=(sec.sections||[]).map(s=>`<a href="#" data-go="section:${esc(s.name)}" class="${view.section===s.name?'active':''}">${esc(s.name)}</a>`).join('');
+  parts.push(`<div class="dd" id="secDD"><a href="#" data-dd="sec">${esc(sec.name)} <span class="caret">&#9662;</span></a><div class="ddmenu">${links}</div></div>`);
  }
+ // Research-to-Impact Collections — cross-cutting topics; "soon" chips until the section goes live
+ const col=nav.collections;
+ if(col && (col.items||[]).length){
+  const items=(col.items||[]).map(c=>col.visible
+    ? `<a href="#" data-go="section:${esc(col.name)}">${esc(c)}</a>`
+    : `<a href="#" data-dd-soon="1">${esc(c)}<span class="ddsoon">soon</span></a>`).join('');
+  const head=col.visible?'':'<div class="ddhead">Coming later</div>';
+  parts.push(`<div class="dd" id="colDD"><a href="#" data-dd="col">${esc(col.name)} <span class="caret">&#9662;</span></a><div class="ddmenu">${head}${items}</div></div>`);
+ }
+ let out=parts.join(div);
  if(nav.about){
   out+=`<a href="#" data-go="about" class="nav-about ${view.type==='about'?'active':''}">${esc(nav.about.name)}</a>`;
  }

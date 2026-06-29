@@ -293,9 +293,11 @@ async function main() {
 
   // ----- nav metadata (data-driven grouping + dividers) -----
   // Top-level nav stays practitioner-first: only the toolkits (IGNITE) and Leading
-  // Implementation (Own). Stories & Spotlights and Evidence & Impact tuck under the
-  // Research-to-Impact Library dropdown, above the practice collections.
+  // Implementation (Own). Stories & Spotlights and Evidence & Impact live in an
+  // "Evidence & Stories" dropdown; the cross-cutting R2I collections get their own.
   const TOP_NAV_TIERS = ['IGNITE', 'Own'];
+  const SECONDARY_NAV_LABEL = 'Evidence & Stories';
+  const COLLECTIONS_NAV_LABEL = 'Research-to-Impact Collections';
   const groups = [];
   pageSections.filter(s => TOP_NAV_TIERS.includes(s.tier)).forEach(s => {
     const g = groups.find(x => x.label === s.header_label);
@@ -307,19 +309,26 @@ async function main() {
   // `practice` surfaces on that practice's page. We pass its name so the template
   // can find those resources without hardcoding the section title.
   const storiesSec = allSections.find(s => s.tier === 'Stories');
-  // Sections shown inside the Library dropdown (Stories & Evidence), ordered.
-  const libSections = pageSections
+  // Two secondary nav dropdowns, kept out of the practitioner-first front row:
+  //   • Evidence & Stories — the proof + the people (Stories & Evidence, live now)
+  //   • R2I Collections — cross-cutting topics (the R2I Library section's modules);
+  //     they show as "soon" chips until that section's nav_visible flips to yes.
+  // These labels are presentation only; the contents stay sheet-driven.
+  const secondarySections = pageSections
     .filter(s => ['Stories', 'Evidence'].includes(s.tier))
     .sort((a, b) => a.order - b.order)
     .map(s => ({ name: s.name }));
+  const collectionItems = libSec
+    ? (modulesBySection[canon(libSec.name)] || []).slice().sort((a, b) => a.order - b.order).map(m => m.name)
+    : [];
   const nav = {
     groups,
-    library: {
-      name: libSec ? libSec.name : 'Research-to-Impact Library',
-      sections: libSections,
-      collections: libSec ? (modulesBySection[canon(libSec.name)] || []).slice().sort((a, b) => a.order - b.order).map(m => m.name) : [],
-      collectionsVisible: libSec ? libSec.nav_visible !== 'hidden-until-live' : false,
-    },
+    secondary: secondarySections.length
+      ? { name: SECONDARY_NAV_LABEL, sections: secondarySections }
+      : null,
+    collections: (libSec && collectionItems.length)
+      ? { name: COLLECTIONS_NAV_LABEL, items: collectionItems, visible: libSec.nav_visible !== 'hidden-until-live' }
+      : null,
     about: aboutSec ? { name: aboutSec.name } : { name: 'About' },
   };
 
@@ -374,7 +383,8 @@ async function main() {
   console.log(`\nBuilt ${path.join(OUT_DIR, 'index.html')}  (source: ${SOURCE})`);
   console.log(`  nav sections: ${sections.map(s => s.name).join(', ')}`);
   console.log(`  resources:    ${resources.length} (${live} published)`);
-  console.log(`  library:      ${nav.library ? nav.library.name + (nav.library.visible ? ' [visible]' : ' [hidden-until-live]') : 'none'}`);
+  console.log(`  secondary:    ${nav.secondary ? nav.secondary.name + ' (' + nav.secondary.sections.map(s => s.name).join(', ') + ')' : 'none'}`);
+  console.log(`  collections:  ${nav.collections ? nav.collections.name + (nav.collections.visible ? ' [visible]' : ' [' + nav.collections.items.length + ' soon]') : 'none'}`);
   console.log(`\nTabs read:`); tabReport.forEach(m => console.log('  - ' + m));
   if (info.length) { console.log(`\nINFO:`); info.forEach(m => console.log('  - ' + m)); }
   if (warn.length) { console.log(`\nWARNINGS (${warn.length}):`); warn.forEach(m => console.log('  ! ' + m)); }
