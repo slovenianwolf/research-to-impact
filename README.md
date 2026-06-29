@@ -104,6 +104,12 @@ node build.js
   `hubspot_form_id` are filled in on the `Site` tab; until then a harmless
   placeholder shows and "just download" still works. No external script loads until
   those IDs are set.
+- **Videos play inline (Vimeo).** Paste a Vimeo link into `video_url` on a resource
+  row (with `format = Video`, `link_type = embed`) and its **Watch** button opens an
+  in-page player. A section's `landing_video` (Sections tab) and a module's
+  `module_video` (Modules tab) render an embedded intro player on those pages. Unlisted
+  "Hide from Vimeo" links keep their privacy hash automatically; non-Vimeo links fall
+  back to opening in a new tab.
 - **Watch the warnings.** The build flags published focal cards with no summary,
   resources pointing at a module that doesn't exist, and blank Site settings. Fix
   these in the sheet.
