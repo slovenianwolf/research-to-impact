@@ -292,8 +292,12 @@ async function main() {
   }
 
   // ----- nav metadata (data-driven grouping + dividers) -----
+  // Top-level nav stays practitioner-first: only the toolkits (IGNITE) and Leading
+  // Implementation (Own). Stories & Spotlights and Evidence & Impact tuck under the
+  // Research-to-Impact Library dropdown, above the practice collections.
+  const TOP_NAV_TIERS = ['IGNITE', 'Own'];
   const groups = [];
-  pageSections.forEach(s => {
+  pageSections.filter(s => TOP_NAV_TIERS.includes(s.tier)).forEach(s => {
     const g = groups.find(x => x.label === s.header_label);
     if (g) g.sections.push(s.name); else groups.push({ label: s.header_label, sections: [s.name] });
   });
@@ -303,13 +307,19 @@ async function main() {
   // `practice` surfaces on that practice's page. We pass its name so the template
   // can find those resources without hardcoding the section title.
   const storiesSec = allSections.find(s => s.tier === 'Stories');
+  // Sections shown inside the Library dropdown (Stories & Evidence), ordered.
+  const libSections = pageSections
+    .filter(s => ['Stories', 'Evidence'].includes(s.tier))
+    .sort((a, b) => a.order - b.order)
+    .map(s => ({ name: s.name }));
   const nav = {
     groups,
-    library: libSec ? {
-      name: libSec.name,
-      visible: libSec.nav_visible !== 'hidden-until-live',
-      collections: (modulesBySection[canon(libSec.name)] || []).slice().sort((a, b) => a.order - b.order).map(m => m.name),
-    } : null,
+    library: {
+      name: libSec ? libSec.name : 'Research-to-Impact Library',
+      sections: libSections,
+      collections: libSec ? (modulesBySection[canon(libSec.name)] || []).slice().sort((a, b) => a.order - b.order).map(m => m.name) : [],
+      collectionsVisible: libSec ? libSec.nav_visible !== 'hidden-until-live' : false,
+    },
     about: aboutSec ? { name: aboutSec.name } : { name: 'About' },
   };
 
