@@ -309,7 +309,7 @@ async function main() {
   // "Evidence & Stories" dropdown; the cross-cutting R2I collections get their own.
   const TOP_NAV_TIERS = ['IGNITE', 'Own'];
   const SECONDARY_NAV_LABEL = 'Evidence & Stories';
-  const COLLECTIONS_NAV_LABEL = 'Collections';
+  const COLLECTIONS_NAV_LABEL = 'R2I Practices';
   const groups = [];
   pageSections.filter(s => TOP_NAV_TIERS.includes(s.tier)).forEach(s => {
     const g = groups.find(x => x.label === s.header_label);
@@ -344,13 +344,41 @@ async function main() {
     about: aboutSec ? { name: aboutSec.name } : { name: 'About' },
   };
 
+  // ----- R2I Practices landing page (the Collections "home", recreated from the
+  // old CoLab landing). Prose lives on the Site tab (editable); the five practice
+  // cards come from the R2I Library modules; testimonials + journey are read from
+  // indexed Site keys (r2i_quote1.., r2i_journey1..). -----
+  const seq = (base, suffixes) => {
+    const out = [];
+    for (let n = 1; n <= 12; n++) {
+      const o = {}; let any = false;
+      for (const s of suffixes) { const v = (S[base + n + s.key] || '').trim(); o[s.as] = v; if (v) any = true; }
+      if (!any) break; out.push(o);
+    }
+    return out;
+  };
+  const r2iPractices = libSec
+    ? (modulesBySection[canon(libSec.name)] || []).slice().sort((a, b) => a.order - b.order)
+        .map(m => ({ name: m.name, intro: m.intro }))
+    : [];
+  const r2iHome = (libSec && nav.collections && nav.collections.visible) ? {
+    heading: (S.r2i_heading || 'Research to Impact Practices').trim(),
+    headline: (S.r2i_headline || '').trim(),
+    intro: (S.r2i_intro || '').trim(),
+    intro2: (S.r2i_intro2 || '').trim(),
+    section: libSec.name,
+    practices: r2iPractices,
+    quotes: seq('r2i_quote', [{ key: '', as: 'quote' }, { key: '_by', as: 'by' }, { key: '_role', as: 'role' }]),
+    journey: seq('r2i_journey', [{ key: '_label', as: 'label' }, { key: '_text', as: 'text' }]),
+  } : null;
+
   // ----- shape exactly what the page render expects -----
   const sections = pageSections.map(s => ({
     name: s.name, intro: s.intro, header_image: s.header_image,
     homepage: HOMEPAGE_TIERS.includes(s.tier), video: s.landing_video,
     modules: s.modules.map(m => ({ name: m.name, order: m.order, intro: m.intro, video: m.video })),
   }));
-  const DATA = { site, sections, nav, resources, storiesSection: storiesSec ? storiesSec.name : null };
+  const DATA = { site, sections, nav, resources, r2iHome, storiesSection: storiesSec ? storiesSec.name : null };
 
   // ----- SEO / social metadata (build-time so crawlers and link unfurlers,
   // which don't run our JS, see real title/description/image) -----

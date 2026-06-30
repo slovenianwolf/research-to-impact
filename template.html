@@ -90,6 +90,31 @@ main{max-width:1040px;margin:0 auto;padding:30px 22px 60px}
 .mcard .mstat.ok{color:var(--ok-tx);font-weight:600}
 .mcard .marrow{flex:none;color:var(--muted);font-size:17px;transition:transform .12s,color .12s}
 .mcard:hover .marrow{color:var(--navy);transform:translateX(2px)}
+/* R2I Practices landing */
+.r2ihero{max-width:780px;margin:0 0 6px}
+.r2ihero h1{font-size:clamp(28px,4vw,42px);color:var(--navy);margin:6px 0 0}
+.r2ihero p{font-size:15.5px;color:#41505f;margin:14px 0 0;line-height:1.65}
+.pcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px}
+.pcard{display:flex;align-items:flex-start;gap:14px;background:var(--white);border:1px solid var(--line);border-radius:13px;padding:16px 18px;transition:border-color .12s,transform .12s,box-shadow .12s}
+.pcard:hover{border-color:var(--navy);transform:translateY(-1px);box-shadow:0 5px 16px rgba(33,52,76,.07)}
+.pcard .pnum{flex:none;width:30px;height:30px;border-radius:50%;background:var(--orange);color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.pcard .pbody{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.pcard .pt{font-size:16px;font-weight:600;color:var(--navy)}
+.pcard .pd{font-size:13.5px;color:#46545f;line-height:1.5}
+.pcard .marrow{flex:none;color:var(--muted);font-size:17px;margin-top:2px;transition:transform .12s,color .12s}
+.pcard:hover .marrow{color:var(--navy);transform:translateX(2px)}
+.tqgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+.tq{background:var(--white);border:1px solid var(--line);border-left:3px solid var(--orange);border-radius:12px;padding:18px 20px;margin:0}
+.tq blockquote{margin:0;font-family:'DM Serif Display',Georgia,serif;font-size:17px;line-height:1.36;color:var(--navy)}
+.tq figcaption{margin-top:12px;display:flex;flex-direction:column;gap:1px}
+.tq .tqn{font-size:13.5px;font-weight:700;color:var(--ink)}
+.tq .tqr{font-size:12.5px;color:var(--muted)}
+.jrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.jstep{display:flex;gap:13px;background:var(--white);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.jstep .jnum{flex:none;width:30px;height:30px;border-radius:50%;background:var(--slate);color:var(--navy);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center}
+.jstep .jbody{display:flex;flex-direction:column;gap:5px}
+.jstep .jlabel{font-size:14px;font-weight:700;color:var(--navy)}
+.jstep .jtext{font-size:13px;color:#46545f;line-height:1.5}
 
 .focalgrid{display:grid;gap:14px;margin-bottom:10px}
 .rcard{background:var(--white);border:1px solid var(--line);border-radius:13px;padding:17px 19px}
@@ -374,7 +399,8 @@ function navHtml(){
  // Research-to-Impact Collections — cross-cutting topics; "soon" chips until the section goes live
  const col=nav.collections;
  if(col && (col.items||[]).length){
-  const items=(col.items||[]).map(c=>col.visible
+  const overview=(col.visible&&DATA.r2iHome)?`<a href="#" data-go="r2ihome">Overview</a><div class="dddiv"></div>`:'';
+  const items=overview+(col.items||[]).map(c=>col.visible
     ? `<a href="#" data-go="module:${esc(col.section||col.name)}|${esc(c)}">${esc(c)}</a>`
     : `<a href="#" data-dd-soon="1">${esc(c)}<span class="ddsoon">soon</span></a>`).join('');
   const head=col.visible?'':'<div class="ddhead">Coming later</div>';
@@ -392,6 +418,7 @@ function titleFor(v){
  const site=(DATA.site&&DATA.site.name)?DATA.site.name:'Research to Impact';
  if(!v||v.type==='home')return site;
  if(v.type==='about')return 'About — '+site;
+ if(v.type==='r2ihome')return (DATA.r2iHome&&DATA.r2iHome.heading||'R2I Practices')+' — '+site;
  if(v.type==='section')return v.section+' — '+site;
  if(v.type==='module')return v.module+' — '+v.section+' — '+site;
  return site;
@@ -400,6 +427,7 @@ function titleFor(v){
 function viewToHash(v){
  if(!v||v.type==='home')return '#/';
  if(v.type==='about')return '#/about';
+ if(v.type==='r2ihome')return '#/practices';
  if(v.type==='section')return '#/'+encodeURIComponent(v.section);
  if(v.type==='module')return '#/'+encodeURIComponent(v.section)+'/'+encodeURIComponent(v.module);
  return '#/';
@@ -409,6 +437,7 @@ function hashToView(){
  if(!raw)return {type:'home'};
  const parts=raw.split('/').map(s=>{try{return decodeURIComponent(s)}catch(_){return s}});
  if(parts[0]==='about')return {type:'about'};
+ if(parts[0]==='practices'&&DATA.r2iHome)return {type:'r2ihome'};
  const sec=DATA.sections.find(s=>s.name===parts[0]);
  if(!sec)return {type:'home'};
  if(parts[1]){const mod=sec.modules.find(m=>m.name===parts[1]);return mod?{type:'module',section:sec.name,module:mod.name}:{type:'section',section:sec.name};}
@@ -419,6 +448,7 @@ window.addEventListener('hashchange',applyHash);
 function renderApp(){
  const a=document.getElementById('app');
  if(view.type==='home') a.innerHTML=home();
+ else if(view.type==='r2ihome') a.innerHTML=r2iHomeView();
  else if(view.type==='section') a.innerHTML=section(view.section);
  else if(view.type==='module') a.innerHTML=module(view.section,view.module);
  else if(view.type==='about') a.innerHTML=about();
@@ -512,6 +542,20 @@ function about(){
  <h2>Team</h2><p>Marshall Street develops the practices, tools, and supports behind this site, as a division of Summit Public Schools.</p>
  ${DATA.site.about_network?`<h2>Network &amp; partners</h2><p>${esc(DATA.site.about_network)}</p>`:''}</div>`;
 }
+// The "R2I Practices" landing — recreated from the old CoLab research-to-impact home.
+function r2iHomeView(){
+ const h=DATA.r2iHome||{};
+ const practices=(h.practices||[]).map((p,i)=>`<a class="pcard" href="#" data-go="module:${escAttr(h.section)}|${escAttr(p.name)}"><span class="pnum">${i+1}</span><span class="pbody"><span class="pt">${esc(p.name)}</span>${p.intro?`<span class="pd">${esc(p.intro)}</span>`:''}</span><span class="marrow" aria-hidden="true">&rarr;</span></a>`).join('');
+ const quotes=(h.quotes||[]).map(q=>`<figure class="tq"><blockquote>${esc(q.quote)}</blockquote><figcaption><span class="tqn">${esc(q.by)}</span>${q.role?`<span class="tqr">${esc(q.role)}</span>`:''}</figcaption></figure>`).join('');
+ const journey=(h.journey||[]).map((j,i)=>`<div class="jstep"><span class="jnum">${i+1}</span><span class="jbody"><span class="jlabel">${esc(j.label)}</span><span class="jtext">${esc(j.text)}</span></span></div>`).join('');
+ const intros=[h.intro,h.intro2].filter(Boolean).map(p=>`<p>${esc(p)}</p>`).join('');
+ return `<div class="crumb"><a href="#" data-go="home">Home</a> / ${esc(h.heading||'R2I Practices')}</div>
+ <div class="r2ihero"><div class="eyebrow">${esc(h.heading||'')}</div><h1 class="serif">${esc(h.headline||h.heading||'')}</h1>${intros}</div>
+ ${practices?`<div class="lab">The five practice collections</div><div class="pcards">${practices}</div>`:''}
+ ${quotes?`<div class="lab">From the field</div><div class="tqgrid">${quotes}</div>`:''}
+ ${journey?`<div class="lab">Our three-year journey</div><div class="jrow">${journey}</div>`:''}
+ <p class="attrib">Built on the Marshall Research to Impact practices &rarr;</p>`;
+}
 
 /* ---- live edit panel ---- */
 function renderPanel(){
@@ -557,6 +601,7 @@ document.addEventListener('click',e=>{
  const g=e.target.closest('[data-go]'); if(!g)return; e.preventDefault();
  const v=g.getAttribute('data-go'); let nv;
  if(v==='home')nv={type:'home'};
+ else if(v==='r2ihome')nv={type:'r2ihome'};
  else if(v==='about')nv={type:'about'};
  else if(v.startsWith('section:'))nv={type:'section',section:v.slice(8)};
  else if(v.startsWith('module:')){const [sec,mod]=v.slice(7).split('|');nv={type:'module',section:sec,module:mod};}
