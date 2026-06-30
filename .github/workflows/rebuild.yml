@@ -1,13 +1,19 @@
 # Rebuilds the site from the Google Sheet without a code change.
-# - Nightly on a schedule
-# - On demand: Actions tab -> "Scheduled rebuild" -> Run workflow
+# - Weekly on a schedule (Mondays) — keeps the site fresh without burning credits.
+# - On demand: Actions tab -> "Scheduled rebuild" -> Run workflow (use this right
+#   after you edit the Sheet to publish immediately).
 # Requires repo secret NETLIFY_BUILD_HOOK (Settings -> Secrets and variables -> Actions).
+#
+# Why weekly, not nightly: each triggered build is a Netlify *production deploy*
+# (15 credits under credit-based pricing). Nightly (~450/mo) overran the Free plan's
+# 300 credits; weekly (~60/mo) stays well within it. Bump the cron back up only on a
+# paid/Open-Source plan, or just run it on demand whenever the Sheet changes.
 name: Scheduled rebuild
 
 on:
   schedule:
-    - cron: "0 9 * * *"   # 09:00 UTC daily (~2-5am US). Adjust as you like.
-  workflow_dispatch: {}    # manual "Run workflow" button
+    - cron: "0 9 * * 1"   # 09:00 UTC every Monday (~2-5am US). Adjust as you like.
+  workflow_dispatch: {}    # manual "Run workflow" button — publishes immediately
 
 jobs:
   rebuild:
