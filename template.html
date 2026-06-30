@@ -187,6 +187,8 @@ nav.main .dd.open .ddmenu{display:block}
 /* Scoped above nav.main a (the navy-header link color) so menu text stays dark on white */
 nav.main .dd .ddmenu a{display:flex;align-items:center;justify-content:space-between;color:var(--ink);font-size:13.5px;padding:8px 10px;border-radius:8px;border-bottom:0;font-weight:500}
 nav.main .dd .ddmenu a:hover{background:var(--accent);color:var(--navy)}
+/* While a menu has just opened under the cursor, hold the hover highlight until the mouse moves */
+body.ddNoHover nav.main .dd .ddmenu a:hover{background:transparent;color:var(--ink)}
 .ddmenu .ddsoon{font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--soon-tx);background:var(--soon-bg);padding:2px 7px;border-radius:20px}
 /* ask the resources */
 #askBtn{display:inline-flex;align-items:center;gap:7px;background:var(--coral);color:var(--ink);border:0;border-radius:30px;padding:8px 15px;font-size:13px;font-weight:700;flex:0 0 auto;cursor:pointer}
@@ -586,7 +588,7 @@ document.addEventListener('click',e=>{
  if(soon){e.preventDefault();toast('These collections arrive in the second wave after launch.');return;}
  const tog=e.target.closest('[data-dd]');
  const all=document.querySelectorAll('nav.main .dd');
- if(tog){e.preventDefault();const par=tog.closest('.dd');all.forEach(d=>{if(d!==par)d.classList.remove('open')});if(par)par.classList.toggle('open');return;}
+ if(tog){e.preventDefault();const par=tog.closest('.dd');all.forEach(d=>{if(d!==par)d.classList.remove('open')});if(par){const opening=!par.classList.contains('open');par.classList.toggle('open');if(opening){/* menu may open under the resting cursor — suppress item hover until the mouse actually moves */document.body.classList.add('ddNoHover');const clr=()=>{document.body.classList.remove('ddNoHover');document.removeEventListener('mousemove',clr);};document.addEventListener('mousemove',clr);}}return;}
  if(!e.target.closest('.dd'))all.forEach(d=>d.classList.remove('open'));
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){askOpen(false);gateClose();closeVideo();}});

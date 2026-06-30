@@ -226,6 +226,7 @@ Also worth adding: **conditional formatting** to flag a blank `summary` when
 | *"Published focal resource has no summary"* | A featured, live card with an empty `summary`. | Add a one-line `summary`. |
 | *"Site setting blank"* | A Site key is empty. | Fill it in on the Site tab. |
 | *"returned 0 rows"* | Tab missing, renamed, or the header row lacks an `id` column. | Check the tab name and that row 1 has the column headers. |
+| *"header row has no `id` column … Rows will be dropped"* | The first header cell (usually **A1**) is blank or got replaced with a space, so the build can't find the `id` column and **drops every row on that tab** — the whole toolkit publishes empty, silently. (Guardrails also shows that tab as `·` instead of `✓`.) | Put the literal text **`id`** back in cell A1 of that tab, then re-run **R2I → Update everything**. |
 
 When in doubt, ask a teammate to run the build and read the warnings — every problem
 is reported by name, nothing fails silently.
