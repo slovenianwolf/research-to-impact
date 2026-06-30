@@ -126,6 +126,38 @@ it reads from the tabs. Do them in this order.
 - **On the live site:** open **Collections → Collaboration**, click a **Download** — it
   should open the re-hosted PDF from the R2I Drive. Spot-check one per collection.
 
+## Second wave: NIC / spread-&-scale resources (from marshall.org/resources)
+
+Seven related resources about the **NIC** (Networked Improvement Community), continuous
+improvement, and spread/scale were moved off `marshall.org/resources`. These are
+research/leader-facing — *not* classroom practices — so they land in existing live tiers,
+**no code changes required**.
+
+**Evidence & Impact → White Papers** (5 — a 3-part NIC series plus two briefs):
+
+| id | title | `focal_order` |
+|---|---|---|
+| `ei-beyond-trust-falls` | Beyond Trust Falls: Launching the NIC (phase 1) | 2 |
+| `ei-educational-equity-instability` | Educational Equity in Times of Instability (phase 2) | 3 |
+| `ei-mapping-the-journey` | Mapping the Journey from Improvement to Impact (phase 3) | 4 |
+| `ei-spread-and-scale-brief` | Spread & Scale Brief | 5 |
+| `ei-continuous-improvement-english-learners` | Continuous Improvement for English Learners | 6 |
+
+(Ordered after the existing `li-1-year-1-white-paper…` at `focal_order 1`.)
+
+**Leading Implementation → Core Content** (2):
+
+| id | title | note |
+|---|---|---|
+| `li-1-nic-playbook` | NIC Playbook | new row |
+| `li-1-spread-and-scale-planning-tool` | Spread Planning Tool | **already existed** — only needed its file + `focal`/`published` set to TRUE |
+
+All seven are open downloads (`gated=FALSE`, `link_type=download`), resolved via the Files
+manifest. PDFs named `<id>.pdf` go in the `[Published] Evidence & Impact` /
+`[Published] Leading Implementation` Drive subfolders; rows paste cleanly (single-line, no
+import needed). Gotcha logged: the resources page's Drive link for the EL whitepaper was
+truncated by one character (404'd) — the correct id was recovered from the page HTML.
+
 ## Backup / provenance
 
 `rename-map.csv` maps each resource id → target filename → the **source Drive id + URL**
