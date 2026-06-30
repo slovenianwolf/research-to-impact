@@ -79,12 +79,17 @@ main{max-width:1040px;margin:0 auto;padding:30px 22px 60px}
 .vidbar .ic{color:var(--orange)}
 
 .lab{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:30px 0 12px}
-.mcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
-.mcard{background:var(--white);border:1px solid var(--line);border-radius:12px;padding:15px 17px;display:flex;flex-direction:column;gap:3px;transition:transform .12s,border-color .12s}
-.mcard:hover{transform:translateY(-2px);border-color:var(--navy)}
-.mcard .mn{font-size:11.5px;color:var(--muted)}
-.mcard .mt{font-size:15.5px;font-weight:500;color:var(--navy)}
-.mcard .chip{margin-top:4px;font-size:11px}
+.mcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:11px}
+.mcard{display:flex;align-items:center;gap:13px;background:var(--white);border:1px solid var(--line);border-radius:12px;padding:13px 15px;transition:border-color .12s,transform .12s,box-shadow .12s}
+.mcard:hover{border-color:var(--navy);transform:translateY(-1px);box-shadow:0 4px 14px rgba(33,52,76,.07)}
+.mcard .mnum{flex:none;width:29px;height:29px;border-radius:50%;background:var(--slate);color:var(--navy);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center}
+.mcard.empty .mnum{color:var(--muted)}
+.mcard .mbody{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.mcard .mt{font-size:15px;font-weight:500;color:var(--navy);line-height:1.25}
+.mcard .mstat{font-size:12px;color:var(--muted)}
+.mcard .mstat.ok{color:var(--ok-tx);font-weight:600}
+.mcard .marrow{flex:none;color:var(--muted);font-size:17px;transition:transform .12s,color .12s}
+.mcard:hover .marrow{color:var(--navy);transform:translateX(2px)}
 
 .focalgrid{display:grid;gap:14px;margin-bottom:10px}
 .rcard{background:var(--white);border:1px solid var(--line);border-radius:13px;padding:17px 19px}
@@ -128,11 +133,13 @@ main{max-width:1040px;margin:0 auto;padding:30px 22px 60px}
 .chip.fmt{background:#eef1f2;color:#55616c}
 
 .morelist{background:var(--white);border:1px solid var(--line);border-radius:12px;overflow:hidden}
-.morerow{display:flex;align-items:center;gap:11px;padding:11px 16px;border-bottom:1px solid var(--line);font-size:14px}
+.morerow{display:flex;align-items:center;gap:11px;padding:10px 14px;border-bottom:1px solid var(--line);font-size:14px;transition:background .12s}
 .morerow:last-child{border-bottom:0}
+.morerow.have:hover{background:#e9f3f5}
 .morerow .ic{color:var(--muted);flex:none}
 .morerow .rt{flex:1;color:var(--ink)}
 .morerow.soon .rt{color:#5f6770}
+.morerow .dl{padding:6px 12px;font-size:12.5px}
 .dot{width:8px;height:8px;border-radius:50%;flex:none}
 .dot.ok{background:#2f9e63}.dot.soon{background:#c4ccd2}
 
@@ -426,7 +433,7 @@ function home(){
 }
 function section(sec){
  const s=DATA.sections.find(x=>x.name===sec);
- const mcards=s.modules.map((m,i)=>{const av=availCount(sec,m.name);return `<a class="mcard" href="#" data-go="module:${sec}|${m.name}"><div class="mn">${sec==='Research-to-Impact Library'?'Collection':(sec==='Leading Implementation'?'Group':'Module '+(i+1))}</div><div class="mt">${esc(m.name)}</div>${av?`<span class="chip ok mt-chip">${av} available</span>`:`<span class="chip soon">coming soon</span>`}</div></a>`}).join('');
+ const mcards=s.modules.map((m,i)=>{const av=availCount(sec,m.name);return `<a class="mcard${av?'':' empty'}" href="#" data-go="module:${sec}|${m.name}"><span class="mnum">${i+1}</span><span class="mbody"><span class="mt">${esc(m.name)}</span><span class="mstat${av?' ok':''}">${av?av+' available':'Coming soon'}</span></span><span class="marrow" aria-hidden="true">&rarr;</span></a>`}).join('');
  const SS=DATA.storiesSection;
  const stories=(s.homepage&&SS)?state.filter(r=>r.section===SS&&r.practice===sec&&r.published):[];
  const shtml=stories.length?`<div class="lab">Stories from the field</div><div class="focalgrid">${stories.map(card).join('')}</div><p class="storiesmore"><a href="#" data-go="section:${esc(SS)}">See all stories &amp; spotlights &rarr;</a></p>`:'';
@@ -489,7 +496,13 @@ function card(r){
  return `<div class="rcard">${r.image?`<img class="rimg" src="${escAttr(r.image)}" alt="" loading="lazy"/>`:''}${main}</div>`;
 }
 function row(r){
- return `<div class="morerow ${r.published?'':'soon'}">${icon(r.format,16)}<span class="rt">${esc(r.title)}</span><span class="chip fmt">${esc(r.format)}</span><span class="dot ${r.published?'ok':'soon'}" title="${r.published?'Available':'Coming soon'}"></span></div>`;
+ // Published non-focal items are still downloadable — show the same Download/Watch
+ // action as a card, just in a compact row (with a light-blue hover). focal only
+ // controls prominence (featured card vs. compact row), not whether you can get it.
+ if(r.published){
+  return `<div class="morerow have">${icon(r.format,16)}<span class="rt">${esc(r.title)}</span><span class="chip fmt">${esc(r.format)}</span>${resAction(r)}</div>`;
+ }
+ return `<div class="morerow soon">${icon(r.format,16)}<span class="rt">${esc(r.title)}</span><span class="chip fmt">${esc(r.format)}</span><span class="dot soon" title="Coming soon"></span></div>`;
 }
 function about(){
  return `<div class="crumb"><a href="#" data-go="home">Home</a> / About</div><div class="about"><h1 class="serif">About</h1>
