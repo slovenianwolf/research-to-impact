@@ -87,13 +87,17 @@ it reads from the tabs. Do them in this order.
 - **Lists tab present** (`docs/sheet-templates/Lists.csv` imported as "Lists"). Its
   R2I Library module column already offers the five collection names.
 
-### 1. Paste the rows (ids must exist before the manifest runs)
-- On the **R2I Library** tab, ensure the header row has these columns (add any missing):
-  `image`, `image_caption`, `body`, `why_it_works`, `quote`, `overview`.
-- Paste `R2I-Library.paste.tsv` → **R2I Library** tab (31 rows; replaces the two
-  placeholder "to inventory / collection landing" stubs per collection).
-- Paste `Modules.rows.tsv` → **Modules** tab (the 5 `R2I Library` modules; set order 1–5
-  and the intros — update existing rows, don't duplicate).
+### 1. Load the rows (ids must exist before the manifest runs)
+- **R2I Library tab — import, don't paste.** Some narratives span multiple paragraphs,
+  whose line breaks corrupt a plain copy-paste. Open the **R2I Library** tab →
+  *File → Import → Upload* `R2I-Library-IMPORT.csv` → **Replace current sheet**,
+  separator *comma*, and leave **"Convert text to numbers/dates" OFF** (keeps `TRUE`/`FALSE`
+  as plain text). This sets the headers (including the new `image_caption`, `body`,
+  `why_it_works`, `quote`, `overview` columns) and all 31 rows in one shot, replacing the
+  placeholder stubs.
+- **Modules tab — paste/edit by hand (only 5 short rows).** Using `Modules.rows.tsv` as the
+  reference, set the five `R2I Library` module rows to order 1–5 with their intros (update
+  the existing rows, don't duplicate).
 
 ### 2. Upload the PDFs
 - Drop the 31 files from `R2I-collections-PDFs.zip` into the **"01 - Published"** Drive
