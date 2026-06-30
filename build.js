@@ -357,19 +357,34 @@ async function main() {
     }
     return out;
   };
+  // Each collection's character illustration (committed under assets/practices/),
+  // mapped by module name. Update here if a collection is renamed.
+  const P_IMG = {
+    'Collaboration': 'collaboration', 'Secondary Literacy': 'literacy', 'Data for MTSS': 'mtss',
+    'Postsecondary': 'postsecondary', 'Emotional Support': 'emotional',
+  };
   const r2iPractices = libSec
     ? (modulesBySection[canon(libSec.name)] || []).slice().sort((a, b) => a.order - b.order)
-        .map(m => ({ name: m.name, intro: m.intro }))
+        .map(m => ({ name: m.name, intro: m.intro, image: P_IMG[m.name] ? imageUrl('practices/' + P_IMG[m.name] + '.png') : '' }))
     : [];
+  const quotes = seq('r2i_quote', [{ key: '', as: 'quote' }, { key: '_by', as: 'by' }, { key: '_role', as: 'role' }, { key: '_img', as: 'img' }])
+    .map(q => ({ ...q, img: q.img ? imageUrl(q.img) : '' }));
+  const partners = seq('r2i_partner', [{ key: '_img', as: 'img' }, { key: '_name', as: 'name' }])
+    .map(p => ({ ...p, img: p.img ? imageUrl(p.img) : '' }));
   const r2iHome = (libSec && nav.collections && nav.collections.visible) ? {
     heading: (S.r2i_heading || 'Research to Impact Practices').trim(),
     headline: (S.r2i_headline || '').trim(),
     intro: (S.r2i_intro || '').trim(),
     intro2: (S.r2i_intro2 || '').trim(),
+    heroImage: imageUrl((S.r2i_hero_image || '').trim()),
     section: libSec.name,
     practices: r2iPractices,
-    quotes: seq('r2i_quote', [{ key: '', as: 'quote' }, { key: '_by', as: 'by' }, { key: '_role', as: 'role' }]),
+    quotes,
     journey: seq('r2i_journey', [{ key: '_label', as: 'label' }, { key: '_text', as: 'text' }]),
+    map: (S.r2i_map_image || '').trim()
+      ? { image: imageUrl(S.r2i_map_image), heading: (S.r2i_map_heading || '').trim(), text: (S.r2i_map_text || '').trim() }
+      : null,
+    partners: partners.length ? { heading: (S.r2i_partners_heading || 'Our Partners').trim(), logos: partners } : null,
   } : null;
 
   // ----- shape exactly what the page render expects -----

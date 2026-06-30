@@ -94,21 +94,38 @@ main{max-width:1040px;margin:0 auto;padding:30px 22px 60px}
 .r2ihero{max-width:780px;margin:0 0 6px}
 .r2ihero h1{font-size:clamp(28px,4vw,42px);color:var(--navy);margin:6px 0 0}
 .r2ihero p{font-size:15.5px;color:#41505f;margin:14px 0 0;line-height:1.65}
-.pcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px}
-.pcard{display:flex;align-items:flex-start;gap:14px;background:var(--white);border:1px solid var(--line);border-radius:13px;padding:16px 18px;transition:border-color .12s,transform .12s,box-shadow .12s}
-.pcard:hover{border-color:var(--navy);transform:translateY(-1px);box-shadow:0 5px 16px rgba(33,52,76,.07)}
-.pcard .pnum{flex:none;width:30px;height:30px;border-radius:50%;background:var(--orange);color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;margin-top:1px}
-.pcard .pbody{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.r2ihero.img{max-width:none;position:relative;border-radius:16px;overflow:hidden;background-size:cover;background-position:center 30%;min-height:340px;display:flex;align-items:flex-end;margin-bottom:20px}
+.r2ihero.img::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,30,45,.2),rgba(20,30,45,.8))}
+.r2ihero.img .r2ihero-in{position:relative;z-index:1;padding:34px 38px;max-width:740px}
+.r2ihero.img h1{color:#fff;font-size:clamp(30px,4.6vw,50px);margin:8px 0 0}
+.eyebrow.light{color:#dfe6ee}
+.r2iintro{max-width:780px;margin:0 0 4px}
+.r2iintro p{font-size:15.5px;color:#41505f;margin:0 0 12px;line-height:1.65}
+.pcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.pcard{display:flex;flex-direction:column;background:var(--white);border:1px solid var(--line);border-radius:14px;overflow:hidden;transition:border-color .12s,transform .12s,box-shadow .12s}
+.pcard:hover{border-color:var(--navy);transform:translateY(-2px);box-shadow:0 8px 22px rgba(33,52,76,.09)}
+.pcard .pimg{display:block;width:100%;aspect-ratio:16/9;background-size:cover;background-position:center;background-color:#eef2f6}
+.pcard .pcard-b{padding:14px 17px 16px;display:flex;flex-direction:column;gap:7px}
+.pcard .prow{display:flex;align-items:center;gap:10px}
+.pcard .pnum{flex:none;width:26px;height:26px;border-radius:50%;background:var(--orange);color:#fff;font-weight:700;font-size:12.5px;display:flex;align-items:center;justify-content:center}
 .pcard .pt{font-size:16px;font-weight:600;color:var(--navy)}
 .pcard .pd{font-size:13.5px;color:#46545f;line-height:1.5}
-.pcard .marrow{flex:none;color:var(--muted);font-size:17px;margin-top:2px;transition:transform .12s,color .12s}
-.pcard:hover .marrow{color:var(--navy);transform:translateX(2px)}
+.pcard .plink{font-size:12.5px;font-weight:700;color:var(--orange);margin-top:1px}
 .tqgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
 .tq{background:var(--white);border:1px solid var(--line);border-left:3px solid var(--orange);border-radius:12px;padding:18px 20px;margin:0}
 .tq blockquote{margin:0;font-family:'DM Serif Display',Georgia,serif;font-size:17px;line-height:1.36;color:var(--navy)}
-.tq figcaption{margin-top:12px;display:flex;flex-direction:column;gap:1px}
+.tq figcaption{margin-top:14px;display:flex;align-items:center;gap:11px}
+.tq .tqa{width:44px;height:44px;border-radius:50%;object-fit:cover;flex:none;background:var(--slate)}
+.tq .tqmeta{display:flex;flex-direction:column;gap:1px;min-width:0}
 .tq .tqn{font-size:13.5px;font-weight:700;color:var(--ink)}
 .tq .tqr{font-size:12.5px;color:var(--muted)}
+.r2imap{background:var(--white);border:1px solid var(--line);border-radius:14px;padding:18px;text-align:center}
+.r2imap p{font-size:14px;color:#46545f;margin:0 0 12px;max-width:60ch;margin-left:auto;margin-right:auto}
+.r2imap img{max-width:100%;height:auto;border-radius:8px}
+.plogos{display:flex;flex-wrap:wrap;align-items:center;gap:16px 34px;padding:6px 2px}
+.plogo{display:flex;align-items:center;justify-content:center;height:44px}
+.plogo img{max-height:44px;max-width:148px;width:auto;object-fit:contain;filter:grayscale(1);opacity:.7;transition:filter .15s,opacity .15s}
+.plogo:hover img{filter:none;opacity:1}
 .jrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
 .jstep{display:flex;gap:13px;background:var(--white);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
 .jstep .jnum{flex:none;width:30px;height:30px;border-radius:50%;background:var(--slate);color:var(--navy);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center}
@@ -545,15 +562,21 @@ function about(){
 // The "R2I Practices" landing — recreated from the old CoLab research-to-impact home.
 function r2iHomeView(){
  const h=DATA.r2iHome||{};
- const practices=(h.practices||[]).map((p,i)=>`<a class="pcard" href="#" data-go="module:${escAttr(h.section)}|${escAttr(p.name)}"><span class="pnum">${i+1}</span><span class="pbody"><span class="pt">${esc(p.name)}</span>${p.intro?`<span class="pd">${esc(p.intro)}</span>`:''}</span><span class="marrow" aria-hidden="true">&rarr;</span></a>`).join('');
- const quotes=(h.quotes||[]).map(q=>`<figure class="tq"><blockquote>${esc(q.quote)}</blockquote><figcaption><span class="tqn">${esc(q.by)}</span>${q.role?`<span class="tqr">${esc(q.role)}</span>`:''}</figcaption></figure>`).join('');
- const journey=(h.journey||[]).map((j,i)=>`<div class="jstep"><span class="jnum">${i+1}</span><span class="jbody"><span class="jlabel">${esc(j.label)}</span><span class="jtext">${esc(j.text)}</span></span></div>`).join('');
  const intros=[h.intro,h.intro2].filter(Boolean).map(p=>`<p>${esc(p)}</p>`).join('');
+ const hero=h.heroImage
+  ? `<div class="r2ihero img" style="background-image:url('${escAttr(h.heroImage)}')"><div class="r2ihero-in"><div class="eyebrow light">${esc(h.heading||'')}</div><h1 class="serif">${esc(h.headline||h.heading||'')}</h1></div></div>${intros?`<div class="r2iintro">${intros}</div>`:''}`
+  : `<div class="r2ihero"><div class="eyebrow">${esc(h.heading||'')}</div><h1 class="serif">${esc(h.headline||h.heading||'')}</h1>${intros}</div>`;
+ const practices=(h.practices||[]).map((p,i)=>`<a class="pcard" href="#" data-go="module:${escAttr(h.section)}|${escAttr(p.name)}">${p.image?`<span class="pimg" style="background-image:url('${escAttr(p.image)}')"></span>`:''}<span class="pcard-b"><span class="prow"><span class="pnum">${i+1}</span><span class="pt">${esc(p.name)}</span></span>${p.intro?`<span class="pd">${esc(p.intro)}</span>`:''}<span class="plink">View practices &rarr;</span></span></a>`).join('');
+ const quotes=(h.quotes||[]).map(q=>`<figure class="tq"><blockquote>${esc(q.quote)}</blockquote><figcaption>${q.img?`<img class="tqa" src="${escAttr(q.img)}" alt="" loading="lazy"/>`:''}<span class="tqmeta"><span class="tqn">${esc(q.by)}</span>${q.role?`<span class="tqr">${esc(q.role)}</span>`:''}</span></figcaption></figure>`).join('');
+ const journey=(h.journey||[]).map((j,i)=>`<div class="jstep"><span class="jnum">${i+1}</span><span class="jbody"><span class="jlabel">${esc(j.label)}</span><span class="jtext">${esc(j.text)}</span></span></div>`).join('');
+ const map=h.map?`<div class="lab">${esc(h.map.heading||'Research-to-Impact Schools')}</div><div class="r2imap">${h.map.text?`<p>${esc(h.map.text)}</p>`:''}<img src="${escAttr(h.map.image)}" alt="${escAttr(h.map.heading||'')}" loading="lazy"/></div>`:'';
+ const partners=(h.partners&&h.partners.logos.length)?`<div class="lab">${esc(h.partners.heading)}</div><div class="plogos">${h.partners.logos.map(l=>`<span class="plogo" title="${escAttr(l.name||'')}"><img src="${escAttr(l.img)}" alt="${escAttr(l.name||'')}" loading="lazy"/></span>`).join('')}</div>`:'';
  return `<div class="crumb"><a href="#" data-go="home">Home</a> / ${esc(h.heading||'R2I Practices')}</div>
- <div class="r2ihero"><div class="eyebrow">${esc(h.heading||'')}</div><h1 class="serif">${esc(h.headline||h.heading||'')}</h1>${intros}</div>
+ ${hero}
  ${practices?`<div class="lab">The five practice collections</div><div class="pcards">${practices}</div>`:''}
  ${quotes?`<div class="lab">From the field</div><div class="tqgrid">${quotes}</div>`:''}
  ${journey?`<div class="lab">Our three-year journey</div><div class="jrow">${journey}</div>`:''}
+ ${map}${partners}
  <p class="attrib">Built on the Marshall Research to Impact practices &rarr;</p>`;
 }
 
