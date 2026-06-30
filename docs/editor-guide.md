@@ -74,6 +74,25 @@ tracking): `priority`, `audience`, `extra_files`, `license`, `r2i_attribution`,
 `owner`, `source_file`, `tags`, `related`, `note`. Leave them or use them freely —
 they won't show on the site.
 
+### Rich practice cards (Collections)
+
+The Research-to-Impact Library tab uses five extra columns to reproduce the fuller
+practice pages migrated from the old CoLab site (a photo, a narrative, a "Why it
+Works" list, and an impact quote). They're optional — blank means a normal card —
+but on a collection practice they render the full layout:
+
+| Column | What it does | Allowed values / notes |
+| --- | --- | --- |
+| `image_caption` | Caption shown under the photo. | Plain text, e.g. `Ednovate, Los Angeles, CA`. |
+| `body` | The full narrative. **Replaces `summary`** on the card when present. | Plain text. Separate paragraphs with a blank line. |
+| `why_it_works` | The "Why it Works" bullet list. | Bullets separated by ` \|\| ` (space-pipe-pipe-space), e.g. `First point \|\| Second point`. |
+| `quote` | The pull-quote (serif, accented). | Plain text, no quote marks needed. |
+| `overview` | Marks the row as the **whole-collection** download → renders the orange "Full collection" CTA card at the top. | `TRUE` / `FALSE` (plain text — Guardrails enforces this). |
+
+The practice **photos** for the migrated collections live in the repo at
+`assets/collections/` and are referenced by the `image` column as a bare path
+(e.g. `collections/collab-01.png`) — no Drive link needed.
+
 ### How a resource row becomes a live card
 1. It's on a section tab → that's its section.
 2. Its `module` matches a Modules row → it lands on that sub-page.
