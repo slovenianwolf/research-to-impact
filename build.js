@@ -34,7 +34,10 @@ const RESOURCE_TABS = [
   'R2I Library', 'Site Assets',
 ];
 // Tiers that render as browsable section + module pages (and appear in the nav).
-const PAGE_TIERS = ['IGNITE', 'Own', 'Stories', 'Evidence'];
+// R2I is the Research-to-Impact Library: it renders as a browsable page (its
+// modules are the cross-cutting "Collections") only once its section's
+// nav_visible flips off 'hidden-until-live'; until then it shows as soon-chips.
+const PAGE_TIERS = ['IGNITE', 'Own', 'Stories', 'Evidence', 'R2I'];
 // Of those, the tiers that also get a card on the homepage. Practitioner-first:
 // the practice toolkits and Leading Implementation are featured; Stories and
 // Evidence are browsable + in nav, but deliberately NOT on the homepage.
@@ -251,12 +254,19 @@ async function main() {
         link: linkFor(r),
         video_url: fileUrl(r.video_url),
         image: imageUrl(r.image),
+        // Rich practice content carried over from the CoLab pages (Collections).
+        // Optional everywhere else; blank = unchanged card.
+        image_caption: (r.image_caption || '').trim(),
+        body: r.body || '',
+        why: String(r.why_it_works || '').split('||').map(s => s.trim()).filter(Boolean),
+        quote: (r.quote || '').trim(),
+        overview: TRUE(r.overview),
       };
       if (!pageNames.has(rec.section)) { dropped++; continue; }
       resources.push(rec);
     }
   }
-  if (dropped) info.push(`${dropped} resources skipped — their section is not a live nav section yet (e.g. Research-to-Impact Library, Site Assets). They return automatically when that section's nav_visible = yes.`);
+  if (dropped) info.push(`${dropped} resources skipped — their section is not a live nav section yet (e.g. Site Assets, or the Research-to-Impact Library while it is still hidden-until-live). They return automatically when that section's nav_visible = yes.`);
 
   // ----- data-quality checks (warn, don't fail) -----
   const modIndex = {}; pageSections.forEach(s => { modIndex[s.name] = new Set(s.modules.map(m => m.name)); });
@@ -329,7 +339,7 @@ async function main() {
       ? { name: SECONDARY_NAV_LABEL, sections: secondarySections }
       : null,
     collections: (libSec && collectionItems.length)
-      ? { name: COLLECTIONS_NAV_LABEL, items: collectionItems, visible: libSec.nav_visible !== 'hidden-until-live' }
+      ? { name: COLLECTIONS_NAV_LABEL, section: libSec.name, items: collectionItems, visible: libSec.nav_visible !== 'hidden-until-live' }
       : null,
     about: aboutSec ? { name: aboutSec.name } : { name: 'About' },
   };

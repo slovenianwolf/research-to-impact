@@ -19,7 +19,7 @@
  * WHAT IT SETS, per resource tab (Co-Planning, Repeated Reading, Routine Data Cycles,
  * Leading Implementation, Stories & Spotlights, Evidence & Impact, R2I Library, Site Assets):
  *   • Dropdowns: format, link_type, status, audience, priority (from Lists), module
- *     (from that tab's Lists column), focal/published/gated (TRUE/FALSE), focal_order (1–4),
+ *     (from that tab's Lists column), focal/published/gated/overview (TRUE/FALSE), focal_order (1–4),
  *     date_published (valid date), and practice (Stories only).
  *   • Booleans forced to PLAIN TEXT so "TRUE" can't silently coerce (the old "Coming soon" bug).
  *   • Conditional formatting: TRUE→green / FALSE→gray; status traffic light; over-limit
@@ -56,7 +56,7 @@ var G_MODULE_LIST_COL = {
   'Leading Implementation': 'N', 'Stories & Spotlights': 'O', 'Evidence & Impact': 'P',
   'R2I Library': 'Q', 'Site Assets': 'R'
 };
-var G_BOOL_COLS = ['focal', 'published', 'gated'];
+var G_BOOL_COLS = ['focal', 'published', 'gated', 'overview'];
 var G_REQUIRED = ['id', 'module', 'title', 'format', 'status'];
 var G_RECOMMENDED = ['summary', 'who_for', 'audience', 'priority', 'link_type', 'link_url'];
 var G_AUTO_COLS = ['focal_order', 'r2i_attribution', 'source_file'];
