@@ -90,6 +90,15 @@ main{max-width:1040px;margin:0 auto;padding:30px 22px 60px}
 .mcard .mstat.ok{color:var(--ok-tx);font-weight:600}
 .mcard .marrow{flex:none;color:var(--muted);font-size:17px;transition:transform .12s,color .12s}
 .mcard:hover .marrow{color:var(--navy);transform:translateX(2px)}
+.mcard.empty{background:#fbfcfc}
+.mcard.empty .mstat{color:#8b939c}
+/* Section (toolkit) hero */
+.sechero{position:relative;border-radius:16px;overflow:hidden;background-size:cover;background-position:center 28%;min-height:290px;display:flex;align-items:flex-end;margin-bottom:16px}
+.sechero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,30,45,.12),rgba(20,30,45,.8))}
+.sechero-in{position:relative;z-index:1;padding:30px 34px;max-width:760px}
+.sechero-in h1{color:#fff;font-size:clamp(28px,4.2vw,44px);margin:0}
+.sechero-sub{font-size:15.5px;color:#41505f;max-width:72ch;margin:0 0 4px;line-height:1.62}
+.lab .labnote{text-transform:none;letter-spacing:normal;font-weight:400;color:var(--muted);margin-left:9px;font-size:12px}
 /* R2I Practices landing */
 .r2ihero{max-width:780px;margin:0 0 6px}
 .r2ihero h1{font-size:clamp(28px,4vw,42px);color:var(--navy);margin:6px 0 0}
@@ -484,11 +493,16 @@ function section(sec){
  const SS=DATA.storiesSection;
  const stories=(s.homepage&&SS)?state.filter(r=>r.section===SS&&r.practice===sec&&r.published):[];
  const shtml=stories.length?`<div class="lab">Stories from the field</div><div class="focalgrid">${stories.map(card).join('')}</div><p class="storiesmore"><a href="#" data-go="section:${esc(SS)}">See all stories &amp; spotlights &rarr;</a></p>`:'';
+ const availTotal=s.modules.reduce((n,m)=>n+availCount(sec,m.name),0);
+ const hero=s.header_image
+   ? `<div class="sechero" style="background-image:url('${escAttr(s.header_image)}')"><div class="sechero-in"><h1 class="serif">${esc(sec)}</h1></div></div>${s.intro?`<p class="sechero-sub">${esc(s.intro)}</p>`:''}`
+   : `<div class="section-h"><h1 class="serif">${esc(sec)}</h1>${s.intro?`<p>${esc(s.intro)}</p>`:''}</div>`;
+ const modLabel=sec==='Leading Implementation'?'Collections':'Modules';
+ const modNote=availTotal===0?`<span class="labnote">resources publishing soon &mdash; check back</span>`:'';
  return `<div class="crumb"><a href="#" data-go="home">Home</a> / ${esc(sec)}</div>
- ${s.header_image?`<img class="sechead" src="${escAttr(s.header_image)}" alt="" loading="lazy"/>`:''}
- <div class="section-h"><h1 class="serif">${esc(sec)}</h1><p>${esc(s.intro)}</p></div>
+ ${hero}
  ${videoBlock(s.video)}
- <div class="lab">${sec==='Leading Implementation'?'Collections':'Modules'}</div><div class="mcards">${mcards}</div>
+ <div class="lab">${modLabel}${modNote}</div><div class="mcards">${mcards}</div>
  ${shtml}
  ${s.homepage?'<p class="attrib">Built on the Marshall Research to Impact practices &rarr;</p>':''}`;
 }
