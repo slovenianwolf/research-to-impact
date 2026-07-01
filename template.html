@@ -311,7 +311,7 @@ nav.main .nav-div{width:1px;height:18px;background:rgba(255,255,255,.22);margin:
 </head>
 <body>
 <a class="skiplink" href="#app">Skip to content</a>
-<div class="protostrip">Prototype &middot; the <b>edit panel</b> (bottom right) stands in for the Google Sheet</div>
+<div class="protostrip">This site is under development &middot; content and features are still being finalized</div>
 <header class="site">
   <a class="logo" data-go="home" href="#" aria-label="Home" title="Home"><img class="logo-img" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEgAAABICAIAAADajyQQAAACNElEQVR42u3aPYsTYRAA4JnZze5tEvbuTDCI/0M7f4U2gqBYHWJh79+wFsRKrAQrP6rjahvtFD24Sjji5eMg73xY+FEla3bjXjZhpgx5Ic++O5OZdxdffzmGbQyCLQ2HOcxhDnOYwxzmMIc5zGHbEvEqi83MzCosREREbC4sSVOKCMraECVwCFwrrToMEY8/fz2fnhMRLE9DEJFL/V5v0FNWwIbBzCxuxc+fPPv44VPWyVR12ZyOaDQc3bp78/bBndFwRBE1b8cA4lYrSZM0SUrBZmkSRRFY44tHqRLy+8s1q/x/zGEOc5jDHOawLRxb/kvPUtxnbxiM4ihJk1aSRPOaYANABFUVlk2CEdH4bHzy7WQ6mhDN3RM00zRL8/29aoPsGmAqmrWzw3eHR++PCuST8eTajesPHj+cTqZEtAYY/omCbJrzoRobF8ACs4isrXiYmoiISME8tohdcC3+ebHqhRlAupO021mWLZ6gETiwsABedCbHle9AZr736D4HRkRbkE7dvPvy6Yu3r950866KbgDs15ble7uLVACgIvluvtPOKle2teUYMxcXwBDC8schDYIV5/cFnIp6E+wwhznMYQ5zmMMaETVP0Ph3ZtPlu3szUNEVm0ys8WVnA4ro9Pvp2fBHRFTmaS6Iaqfb6V+5bFV5ca3bpaK9QX9wdVB2ckFEEeHAzb0VOQSezaD0CG2w2nBQ+ykVIkKV37fqvOPl3mEOc5jDHOYwhznMYQ5zWMPjJ9B8/GQDJY8IAAAAAElFTkSuQmCC" alt="Marshall CoLab"/></a>
   <nav class="main" id="nav"></nav>
@@ -344,7 +344,6 @@ nav.main .nav-div{width:1px;height:18px;background:rgba(255,255,255,.22);margin:
     </div>
   </aside>
 </div>
-<button id="demoToggle" aria-label="Open the live edit panel"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20h4l10-10-4-4L4 16z"/><path d="M14 6l4 4"/></svg> Edit the sheet</button>
 <aside id="panel" aria-label="Live edit panel"></aside>
 <div class="toast" id="toast"></div>
 <div class="gate" id="gate" aria-hidden="true">
@@ -645,7 +644,7 @@ document.addEventListener('click',e=>{
  else if(v.startsWith('module:')){const [sec,mod]=v.slice(7).split('|');nv={type:'module',section:sec,module:mod};}
  if(nv)navigate(nv);
 });
-document.getElementById('demoToggle').addEventListener('click',()=>togglePanel());
+document.getElementById('demoToggle')?.addEventListener('click',()=>togglePanel());
 /* ---- combined search + ask ---- */
 const AI_ANSWERS=false; // flip to true when the retrieval bot is live
 function searchResources(q){
