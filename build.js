@@ -89,6 +89,28 @@ function imageUrl(url) {
   if (/^https?:\/\//i.test(s)) return s;
   return 'assets/' + s.replace(/^\/+/, '');
 }
+// A video link. Editors sometimes paste Vimeo's full "Embed" snippet (iframe +
+// script tag) instead of the page link; pull the video id back out so the inline
+// player still works. Vimeo "share" links (vimeo.com/share/<uuid>) carry no
+// video id, so the player can't embed them — the video falls back to opening in
+// a new tab; warn so the editor swaps in the numeric link.
+function videoUrl(url, where) {
+  const s = String(url || '').trim(); if (!s) return '';
+  if (s.includes('<')) {
+    const m = s.match(/player\.vimeo\.com\/video\/(\d+)(?:[^"'\s]*[?&]h=([0-9a-zA-Z]+))?/);
+    if (m) {
+      const clean = `https://vimeo.com/${m[1]}${m[2] ? '/' + m[2] : ''}`;
+      warn.push(`${where}: cell contains pasted Vimeo embed code, not a link. Rescued it as ${clean} — please put that link in the cell.`);
+      return clean;
+    }
+    warn.push(`${where}: cell contains HTML (looks like pasted embed code) with no recognizable Vimeo link — ignored. Paste the video's page link instead.`);
+    return '';
+  }
+  if (/vimeo\.com\/share\//i.test(s)) {
+    warn.push(`${where}: vimeo.com/share/... links have no video id, so the video opens in a new tab instead of playing inline. Open the share link in a browser and use the numeric URL it lands on (e.g. https://vimeo.com/123456789).`);
+  }
+  return fileUrl(s);
+}
 
 // Minimal RFC-4180-ish CSV parser: handles quoted fields, embedded commas,
 // newlines, and "" escapes. Returns an array of row-arrays.
@@ -182,7 +204,7 @@ async function main() {
   const modRows = (await loadTab(MODULES_TAB, 'module_name')).map(m => ({
     section: canon(m.section), order: num(m.module_order),
     name: (m.module_name || '').trim(), intro: m.module_intro || '',
-    video: (m.module_video || '').trim(),
+    video: videoUrl(m.module_video, `Modules tab, module "${(m.module_name || '').trim()}" module_video`),
   })).filter(m => m.name);
   const modulesBySection = group(modRows, m => m.section);
 
@@ -195,7 +217,7 @@ async function main() {
       header_label: (r.header_label || '').trim(), tier: (r.tier || '').trim(),
       order: num(r.order), nav_visible: (r.nav_visible || '').trim(),
       intro: r.landing_intro || '', header_image: imageUrl(r.header_image),
-      landing_video: (r.landing_video || '').trim(),
+      landing_video: videoUrl(r.landing_video, `Sections tab, "${name}" landing_video`),
       modules: (modulesBySection[name] || []).slice().sort((a, b) => a.order - b.order),
     };
   }).filter(s => s.name);
@@ -241,6 +263,7 @@ async function main() {
     const sectionName = canon(tab);
     for (const r of rows) {
       if (!(r.id || '').trim()) continue;
+      const video_url = videoUrl(r.video_url, `${tab} row "${r.id.trim()}" video_url`);
       const rec = {
         id: r.id.trim(), section: sectionName, module: (r.module || '').trim(),
         title: (r.title || '').trim(), format: (r.format || 'Other').trim(),
@@ -250,9 +273,9 @@ async function main() {
         practice: (r.practice || '').trim(),
         summary: r.summary || '', who_for: r.who_for || '',
         isnew: isRecent(r.date_published),
-        video: String(r.link_type || '').trim() === 'embed' || !!(r.video_url || '').trim(),
+        video: String(r.link_type || '').trim() === 'embed' || !!video_url,
         link: linkFor(r),
-        video_url: fileUrl(r.video_url),
+        video_url,
         image: imageUrl(r.image),
         // Rich practice content carried over from the CoLab pages (Collections).
         // Optional everywhere else; blank = unchanged card.
@@ -419,7 +442,11 @@ async function main() {
   if (!fs.existsSync(TEMPLATE)) throw new Error(`Template not found: ${TEMPLATE}`);
   const tpl = fs.readFileSync(TEMPLATE, 'utf8');
   if (!tpl.includes('__DATA__')) throw new Error('template.html is missing the __DATA__ placeholder.');
-  let html = tpl.replace('__DATA__', JSON.stringify(DATA));
+  // The data lands inside an inline <script>: escape "<" so no sheet content
+  // (e.g. a pasted "</script>" in an embed snippet) can terminate the script
+  // block early, and use a function replacement so "$"-sequences in content
+  // aren't treated as replace() substitution patterns.
+  let html = tpl.replace('__DATA__', () => JSON.stringify(DATA).replace(/</g, '\\u003c'));
   for (const [k, v] of Object.entries(seo)) html = html.split(k).join(v);
   fs.mkdirSync(OUT_DIR, { recursive: true });
   fs.writeFileSync(path.join(OUT_DIR, 'index.html'), html);
