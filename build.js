@@ -92,8 +92,7 @@ function imageUrl(url) {
 // A video link. Editors sometimes paste Vimeo's full "Embed" snippet (iframe +
 // script tag) instead of the page link; pull the video id back out so the inline
 // player still works. Vimeo "share" links (vimeo.com/share/<uuid>) carry no
-// video id, so the player can't embed them — the video falls back to opening in
-// a new tab; warn so the editor swaps in the numeric link.
+// video id — resolveShareLinks() swaps them for the numeric URL after all tabs load.
 function videoUrl(url, where) {
   const s = String(url || '').trim(); if (!s) return '';
   if (s.includes('<')) {
@@ -106,10 +105,36 @@ function videoUrl(url, where) {
     warn.push(`${where}: cell contains HTML (looks like pasted embed code) with no recognizable Vimeo link — ignored. Paste the video's page link instead.`);
     return '';
   }
-  if (/vimeo\.com\/share\//i.test(s)) {
-    warn.push(`${where}: vimeo.com/share/... links have no video id, so the video opens in a new tab instead of playing inline. Open the share link in a browser and use the numeric URL it lands on (e.g. https://vimeo.com/123456789).`);
-  }
   return fileUrl(s);
+}
+// Vimeo "share" links (what the Share dialog's Copy link gives you) look like
+// vimeo.com/share/<uuid> — no video id, so the inline player can't embed them.
+// The share page itself carries the canonical numeric URL (plus the ?h= embed
+// hash for unlisted videos); fetch it once per unique link and swap the numeric
+// URL in. On any failure the share link stays as-is, which still works — the
+// video just opens in a new tab instead of playing inline.
+async function resolveShareLinks(holders) {
+  const isShare = h => /^https:\/\/vimeo\.com\/share\//i.test(h.obj[h.key] || '');
+  const pending = holders.filter(isShare);
+  const resolved = {};
+  for (const u of [...new Set(pending.map(h => h.obj[h.key].split('?')[0]))]) {
+    try {
+      const res = await fetch(u, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+      const html = res.ok ? await res.text() : '';
+      const m = html.match(/player\.vimeo\.com\/video\/(\d+)(?:\?h=([0-9a-zA-Z]+))?/)
+             || html.match(/rel="canonical" href="https:\/\/vimeo\.com\/(\d+)/);
+      resolved[u] = m ? `https://vimeo.com/${m[1]}${m[2] ? '/' + m[2] : ''}` : null;
+    } catch { resolved[u] = null; }
+  }
+  for (const h of pending) {
+    const clean = resolved[h.obj[h.key].split('?')[0]];
+    if (clean) {
+      info.push(`${h.where}: resolved Vimeo share link -> ${clean} (consider putting that link in the cell).`);
+      h.obj[h.key] = clean;
+    } else {
+      warn.push(`${h.where}: could not resolve the vimeo.com/share/... link to a video id — the video will open in a new tab instead of playing inline. Put the numeric URL (e.g. https://vimeo.com/123456789) in the cell.`);
+    }
+  }
 }
 
 // Minimal RFC-4180-ish CSV parser: handles quoted fields, embedded commas,
@@ -409,6 +434,13 @@ async function main() {
       : null,
     partners: partners.length ? { heading: (S.r2i_partners_heading || 'Our Partners').trim(), logos: partners } : null,
   } : null;
+
+  // ----- resolve Vimeo share links to numeric URLs (before shaping copies the values) -----
+  await resolveShareLinks([
+    ...resources.map(r => ({ obj: r, key: 'video_url', where: `${r.section} row "${r.id}" video_url` })),
+    ...allSections.map(s => ({ obj: s, key: 'landing_video', where: `Sections tab, "${s.name}" landing_video` })),
+    ...modRows.map(m => ({ obj: m, key: 'video', where: `Modules tab, module "${m.name}" module_video` })),
+  ]);
 
   // ----- shape exactly what the page render expects -----
   const sections = pageSections.map(s => ({
