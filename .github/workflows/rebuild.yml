@@ -8,6 +8,12 @@
 # (15 credits under credit-based pricing). Nightly (~450/mo) overran the Free plan's
 # 300 credits; weekly (~60/mo) stays well within it. Bump the cron back up only on a
 # paid/Open-Source plan, or just run it on demand whenever the Sheet changes.
+#
+# Why the keepalive step: GitHub disables scheduled workflows after 60 days with no
+# pushes to the repo, and it only warns you once by email. When that happens nothing
+# fails loudly — the site just quietly stops picking up Sheet edits. The keepalive
+# pushes a timestamp each run so the schedule sustains itself. (A push made with
+# GITHUB_TOKEN does not trigger workflows, so this cannot loop or fire a Netlify build.)
 name: Scheduled rebuild
 
 on:
@@ -18,6 +24,8 @@ on:
 jobs:
   rebuild:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write      # needed by the keepalive step to push its timestamp
     steps:
       - name: Trigger Netlify build hook
         env:
@@ -29,3 +37,40 @@ jobs:
           fi
           curl -fsSL -X POST -d '{}' "$NETLIFY_BUILD_HOOK"
           echo "Build hook triggered."
+
+      # Runs even if the hook above failed — a broken rebuild should still keep its
+      # schedule alive, so you can fix the secret rather than also having to re-enable
+      # the workflow.
+      - name: Checkout
+        if: always()
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Keep the schedule alive
+        if: always()
+        run: |
+          set -euo pipefail
+          {
+            echo "Last scheduled rebuild: $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+            echo
+            echo "Written automatically by .github/workflows/rebuild.yml. This file exists"
+            echo "only so the repo keeps seeing pushes: GitHub disables scheduled workflows"
+            echo "after 60 days of inactivity, which would silently stop the site from"
+            echo "picking up Google Sheet edits. Safe to leave alone; do not delete."
+          } > .github/last-rebuild.txt
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/last-rebuild.txt
+
+          if git diff --cached --quiet; then
+            echo "Nothing to commit."
+            exit 0
+          fi
+
+          git commit -m "Keepalive: record scheduled rebuild timestamp"
+          # Rebase in case main moved while this run was queued.
+          git pull --rebase --autostash origin main
+          git push origin HEAD:main
+          echo "Keepalive pushed; the 60-day inactivity clock is reset."
