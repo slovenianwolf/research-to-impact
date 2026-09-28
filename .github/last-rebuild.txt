@@ -1,0 +1,6 @@
+Last scheduled rebuild: 2026-09-28T17:26:32Z
+
+Written automatically by .github/workflows/rebuild.yml. This file exists
+only so the repo keeps seeing pushes: GitHub disables scheduled workflows
+after 60 days of inactivity, which would silently stop the site from
+picking up Google Sheet edits. Safe to leave alone; do not delete.
